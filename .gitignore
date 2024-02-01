@@ -1,0 +1,17 @@
+# Gmail OAuth Keys + Token
+GmailVerification/credentials.json
+GmailVerification/token.json
+
+# Selenium Cache
+SocialCasinos/ChumbaCasino/__pycache__
+SocialCasinos/FortuneCoins/__pycache__
+SocialCasinos/McLuck/__pycache__
+SocialCasinos/ModoUS/__pycache__
+SocialCasinos/StakeUS/__pycache__
+
+# Social Casino Credentials 
+credentials.JSON
+
+# Quarto Preview
+README.html
+README_files
