@@ -2,7 +2,7 @@
 ## INITIAL SET-UP ##
 ##                ## 
 
-from SocialCasinos.ChumbaCasino.credentials import ReadCredentials
+from credentials import ReadCredentials
 import undetected_chromedriver as UC
 import random
 from selenium import webdriver

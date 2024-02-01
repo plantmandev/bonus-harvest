@@ -2,7 +2,7 @@
 ## INITIAL SET-UP ##
 ##                ## 
 
-from credentials import ReadCredentials
+from SocialCasinos.StakeUS.credentials import ReadCredentials
 import undetected_chromedriver as UC
 import random
 from selenium import webdriver

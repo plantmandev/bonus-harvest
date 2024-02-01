@@ -56,7 +56,7 @@ This step is set up so that funds in these 'social casinos' are automatically wi
 | Chumba Casino |                            $7                            |           96.78%           |                             $6.77                             |     |
 | Fortune Coins |                            $7                            |           95.33%           |                             $6.67                             |     |
 |    McLuck     | <u>First Week:</u> $2.8 <br> <u>Weeks thereafter:</u> $7 |           96.57%           | <u>First Week :</u> $2.70 <br> <u>Weeks thereafter:</u> $6.76 |     |
-|    Modu.us    | <u>First Week:</u> $4.4 <br> <u>Weeks thereafter:</u> $7 |           95.93%           | <u>First Week :</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |
+|    Modu.us    | <u>First Week:</u> $4.4 <br> <u>Weeks thereafter:</u> $7 |           95.93%           | <u>First Week :</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |     |
 
 ^\*^ RTP is a proportion of average earnings in a game over time. This is calculated based on most profitable gleaning strategies (this project specifically used [BestOdds.com](Bestodds.com), [Covers.com](covers.com) and [UScasinos.com](uscasinos.com))\_
 
