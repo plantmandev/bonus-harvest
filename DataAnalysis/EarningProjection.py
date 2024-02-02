@@ -111,8 +111,8 @@ plt.ylabel('Earnings', fontsize=14)
 plt.grid(False)
 plt.legend(fontsize=12)
 
+# Save plot
+plt.savefig('EarningsProjection.png', format = 'png')
+
 # Show the plot
 plt.show()
-
-# Save plot
-plt.savefig('EarningsProjection.png')
