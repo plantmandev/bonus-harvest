@@ -50,13 +50,13 @@ This step is set up so that funds in these 'social casinos' are automatically wi
 
 ### Weekly earnings|
 
-| Social Casino |          Average Weekly Earnings           | Return to Player (RTP)^\*^ |          Average Payout Rate (Weekly)          |
-| :-----------: | :----------------------------------------: | :------------------------: | :--------------------------------------------: |
-|   Stake.us    |                     $7                     |            98%             |                     $6.86                      |
-| Chumba Casino |                     $7                     |           96.78%           |                     $6.77                      |
-| Fortune Coins |                     $7                     |           95.33%           |                     $6.67                      |
-|    McLuck     | First Week: $2.8 <br> Weeks thereafter: $7 |           96.57%           | First Week: $2.70 <br> Weeks thereafter: $6.76 |
-|    Modu.us    | First Week: $4.4 <br> Weeks thereafter: $7 |           95.93%           | First Week: $4.22 <br> Weeks thereafter: $6.72 |
+| Social Casino |                 Average Weekly Earnings                  | Return to Player (RTP)^\*^ |                 Average Payout Rate (Weekly)                 |
+| :-----------: | :------------------------------------------------------: | :------------------------: | :----------------------------------------------------------: |
+|   Stake.us    |                            $7                            |            98%             |                            $6.86                             |
+| Chumba Casino |                            $7                            |           96.78%           |                            $6.77                             |
+| Fortune Coins |                            $7                            |           95.33%           |                            $6.67                             |
+|    McLuck     | <u>First Week:</u> $2.8 <br> <u>Weeks thereafter:</u> $7 |           96.57%           | <u>First Week:</u> $2.70 <br> <u>Weeks thereafter:</u> $6.76 |
+|    Modu.us    |   <u>First Week:</u> <br> <u>Weeks thereafter:</u> $7    |           95.93%           | <u>First Week:</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |
 
 ^\*^ RTP is a proportion of average earnings in a game over time. This is calculated based on most profitable gleaning strategies (this project specifically used [BestOdds.com](Bestodds.com), [Covers.com](covers.com) and [UScasinos.com](uscasinos.com))\_
 
@@ -100,7 +100,9 @@ The following links are sign-up links with bonuses. Using these links support th
 
 Over time, as in-game currency is played through the social casinos
 
-Graph showing winnings over time + Monte Carlo simulation
+### Earnings Projection
+
+![Plot](EarningsProjection.png)
 
 RTP database for all online slot games + cross reference with compatible social casinos and shared slots
 https://www.letsplayslots.com/slots-rtp
