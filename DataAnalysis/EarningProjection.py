@@ -4,6 +4,7 @@
 
 import os
 import csv
+import random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +26,6 @@ for x in range(1, TimeScope):
     StakeEarnings.append(float("{:.2f}".format(StakeDailyEarnings)))
     StakeDailyEarnings += float("{:.2f}".format(StakeBaseEarnings * (StakeAverageRTP / 100)))
 
-
 # ChumbaCasino # 
 ChumbaEarnings = [] 
 ChumbaBaseEarnings = 1
@@ -46,15 +46,18 @@ for x in range(1, TimeScope):
     FortuneEarnings.append(float("{:.2f}".format(FortuneDailyEarnings)))
     FortuneDailyEarnings += float("{:.2f}".format(FortuneBaseEarnings * (FortuneAverageRTP / 100)))
 
-# McLuck
-McLuckEarnings = [0.3, 0.3, 0.3, 0.5, 1, 1, 1]
-McLuckBaseEarnings = 1
-McLuckAverageRTP = 96.57
-McLuckDailyEarnings = McLuckBaseEarnings * (McLuckAverageRTP/100)
+#        #       
+# McLuck # 
+#        # 
 
-for x in range(1, (TimeScope - 7)):
-    McLuckEarnings.append(float("{:.2f}".format(McLuckDailyEarnings)))
-    McLuckDailyEarnings += float("{:.2f}".format(McLuckBaseEarnings * (McLuckAverageRTP / 100)))
+McLuckEarnings = []
+# McLuck has a random bonus 'DailyEarningsOptions'
+McLuckEarningsOptions = [0.25, 0.35] 
+McLuckAverageRTP = 96.57
+
+for x in range(1, TimeScope):
+  McLuckEarnings.append(McLuckEarningsOptions[random.randint(0, 1) * (McLuckAverageRTP/100)])
+  McLuckEarningsOptions += McLuckEarningsOptions * (McLuckAverageRTP/100)
 
 # ModoUS
 ModoEarnings = [0.3, 0.3, 0.3, 0.5, 1, 1, 1]
@@ -105,7 +108,7 @@ plt.plot(Day, McLuckEarnings, label='McLuck Earnings', marker='d', linewidth=2, 
 plt.plot(Day, ModoEarnings, label='Modo Earnings', marker='v', linewidth=2, markersize=6)
 
 # Customize plot appearance
-plt.title('Earnings Over Days', fontsize=16)
+plt.title('Earnings Over Time', fontsize=16)
 plt.xlabel('Days', fontsize=14)
 plt.ylabel('Earnings', fontsize=14)
 plt.grid(False)

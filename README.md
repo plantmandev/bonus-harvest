@@ -44,19 +44,19 @@ The website [BestOdds.com](https://www.bestodds.com/) was used to determine the 
 
 ### 5. Harvest Time (Cash-out) 🌽
 
-This step is set up so that funds in these 'social casinos' are automatically withdrawn as soon as a monetary threshold is achieved. Cashout method is determined by user preference (direct deposit, cryptocurrency or giftcard). Email is sent to user letting them know that funds will be sent to preferred payment method. Option is given to change preference in the cashout amount (Normally $50+ per site)
+This step is set up so that funds in these 'social casinos' are automatically withdrawn as soon as a monetary threshold is achieved. The ashout method is determined by user preference (direct deposit, cryptocurrency or giftcard). Email is sent to user letting them know that funds will be sent to preferred payment method. The option is given to change preference in the cashout amount (Normally $50+ per site)
 
 ## How much money can be made?
 
 ### Weekly earnings|
 
-| Social Casino |                 Average Weekly Earnings                  | Return to Player (RTP)^\*^ |                 Average Payout Rate (Weekly)                 |
-| :-----------: | :------------------------------------------------------: | :------------------------: | :----------------------------------------------------------: |
-|   Stake.us    |                            $7                            |            98%             |                            $6.86                             |
-| Chumba Casino |                            $7                            |           96.78%           |                            $6.77                             |
-| Fortune Coins |                            $7                            |           95.33%           |                            $6.67                             |
-|    McLuck     | <u>First Week:</u> $2.8 <br> <u>Weeks thereafter:</u> $7 |           96.57%           | <u>First Week:</u> $2.70 <br> <u>Weeks thereafter:</u> $6.76 |
-|    Modu.us    |   <u>First Week:</u> <br> <u>Weeks thereafter:</u> $7    |           95.93%           | <u>First Week:</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |
+| Social Casino |               Average Weekly Earnings               | Return to Player (RTP)^\*^ |                 Average Payout Rate (Weekly)                 |
+| :-----------: | :-------------------------------------------------: | :------------------------: | :----------------------------------------------------------: |
+|   Stake.us    |                         $7                          |            98%             |                            $6.86                             |
+| Chumba Casino |                         $7                          |           96.78%           |                            $6.77                             |
+| Fortune Coins |                         $7                          |           95.33%           |                            $6.67                             |
+|    McLuck     |                        $2.1                         |           96.57%           |                            $2.03                             |
+|    Modu.us    | <u>First Week:</u> <br> <u>Weeks thereafter:</u> $7 |           95.93%           | <u>First Week:</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |
 
 ^\*^ RTP is a proportion of average earnings in a game over time. This is calculated based on most profitable gleaning strategies (this project specifically used [BestOdds.com](Bestodds.com), [Covers.com](covers.com) and [UScasinos.com](uscasinos.com))\_
 
@@ -67,6 +67,8 @@ This step is set up so that funds in these 'social casinos' are automatically wi
 - [Fortune Coins](https://www.fortunecoins.com/)
 - [McLuck](https://www.mcluck.com/)
 - [Modo.us](https://modo.us/)
+
+Support for more social casinos is currently in development. The updated list of social casinos of interest provided by reddit user [u/lovebud99](https://www.reddit.com/user/lovebud99/) can be found [here](https://docs.google.com/spreadsheets/d/1EwpEnGC1ZSHpk7zWtE_CoVYJGpcIWIX1oTqa7T561EM/edit#gid=0).
 
 ## How To Use
 

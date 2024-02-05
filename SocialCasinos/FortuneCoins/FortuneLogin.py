@@ -60,3 +60,6 @@ PasswordElement.click()
 PasswordElement.send_keys(CasinoPassword)
 PasswordElement.send_keys(Keys.ENTER)
 time.sleep(10)
+
+Fortune_Login_test
+Fortune_Login_test
