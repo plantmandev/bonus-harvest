@@ -50,14 +50,14 @@ for x in range(1, TimeScope):
 # McLuck # 
 #        # 
 
-McLuckEarnings = []
-# McLuck has a random bonus 'DailyEarningsOptions'
-McLuckEarningsOptions = [0.25, 0.35] 
-McLuckAverageRTP = 96.57
+# McLuckEarnings = []
+# # McLuck has a random bonus 'DailyEarningsOptions'
+# McLuckEarningsOptions = [0.25, 0.35] 
+# McLuckAverageRTP = 96.57
 
-for x in range(1, TimeScope):
-  McLuckEarnings.append(McLuckEarningsOptions[random.randint(0, 1) * (McLuckAverageRTP/100)])
-  McLuckEarningsOptions += McLuckEarningsOptions * (McLuckAverageRTP/100)
+# for x in range(1, TimeScope):
+#   McLuckEarnings.append(McLuckEarningsOptions[random.randint(0, 1) * (McLuckAverageRTP/100)])
+#   McLuckEarningsOptions += McLuckEarningsOptions * (McLuckAverageRTP/100)
 
 # ModoUS
 ModoEarnings = [0.3, 0.3, 0.3, 0.5, 1, 1, 1]
