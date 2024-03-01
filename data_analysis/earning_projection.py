@@ -1,14 +1,10 @@
 #   INITIAL SET-UP   #
 import os
 import csv
-import random
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 #   DATA ANALYIS   # 
-
-# Model time scope (exclusive)
 time_scope = 16
 
 def stake_earnings_list(time_scope): 
@@ -51,16 +47,6 @@ def fortune_earnings_list(time_scope):
 # McLuck # 
 #        # 
 
-# McLuckEarnings = []
-# # McLuck has a random bonus 'DailyEarningsOptions'
-# McLuckEarningsOptions = [0.25, 0.35] 
-# McLuckAverageRTP = 96.57
-
-# for x in range(1, TimeScope):
-#   McLuckEarnings.append(McLuckEarningsOptions[random.randint(0, 1) * (McLuckAverageRTP/100)])
-#   McLuckEarningsOptions += McLuckEarningsOptions * (McLuckAverageRTP/100)
-
-# Experimental desing below 
 
 # McLuckEarnings = []
 # # McLuck has a random bonus 'DailyEarningsOptions'

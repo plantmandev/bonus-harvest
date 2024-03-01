@@ -108,3 +108,7 @@ Over time, as in-game currency is played through the social casinos
 
 RTP database for all online slot games + cross reference with compatible social casinos and shared slots
 https://www.letsplayslots.com/slots-rtp
+
+# Withdrawal options
+
+Connect crypto wallets to automate withdrawals

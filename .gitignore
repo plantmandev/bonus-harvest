@@ -3,11 +3,10 @@ GmailVerification/credentials.json
 GmailVerification/token.json
 
 # Selenium Cache
-SocialCasinos/ChumbaCasino/__pycache__
-SocialCasinos/FortuneCoins/__pycache__
-SocialCasinos/McLuck/__pycache__
-SocialCasinos/ModoUS/__pycache__
-SocialCasinos/StakeUS/__pycache__
+social_casinos/__pycache__
+
+# chromedriver
+chromedriver
 
 # Social Casino Credentials 
 credentials.JSON
@@ -15,3 +14,6 @@ credentials.JSON
 # Quarto Preview
 README.html
 README_files
+
+# Test
+test.py

@@ -5,7 +5,6 @@
 # Fortune Coins is one of the best social casino websites used in this project. 
 
 #   INITIAL SET-UP   #
-# Imports needed package 
 
 import json
 import time
@@ -19,41 +18,30 @@ from selenium.common.exceptions import WebDriverException
 import undetected_chromedriver as UC
 
 #   ANTI-DETECTION   # 
-# 
 
 # Mask IP Address
 options = webdriver.ChromeOptions()
-options.add_argument('proxy-server=138.234.226.100')
+options.add_argument('proxy-server = 138.234.226.100')
 
 # Use 'Undetected Chrome Driver' + Define path
+chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/bonus-harvest/chromedriver'
 driver = UC.Chrome(options)
-chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/casino-farming/chromedriver'
-
-# Input Timing Randomization (Anti-detection)
-input_time = random.uniform(0.01, 1)
 
 #   CREDENTIALS   # 
-# Finds credentials based on CredentialType for different social casinos and returns value from 'credentials.JSON' file containing all login credentials
 
-def read_credentials():
-    # Define paths + credential type
+def read_credentials(credential_type):
     credential_path = 'credentials.JSON'
-    credential_type = 'fortune_'
-
-    # Read credentials.JSON file
     with open(credential_path, 'r') as file:
-        CredentialsData = json.load(file) 
+        credential_data = json.load(file)
     
-    # Look for CredentialType
-    if credential_path in CredentialsData:
-        return CredentialsData[credential_type]
-    else:
-        return None 
+    return credential_data.get(credential_type)
     
 #   LOGIN   # 
-# Uses selenium drivers and credentials.json to access casino website account
 
-def fortune_login(driver, input_time, read_credentials):
+def fortune_login(driver, read_credentials):
+    # Input Timing Randomization (Anti-detection)
+    input_time = random.uniform(0.01, 2)
+
     # Defines casino website URL
     casino_website = 'https://www.fortunecoins.com/public-lobby'
 
@@ -66,52 +54,49 @@ def fortune_login(driver, input_time, read_credentials):
     login_element.click()
     time.sleep(input_time)
 
-    # Defines path for credentials file (used for login)
-    credentials_path = 'credentials.JSON'
+    # Provides username + password credentials
+    casino_username = read_credentials('fortune_username')
+    casino_password = read_credentials('fortune_password')
 
     # Find username input + Add username
-    credentials_type = 'fortune_username'
-
-    casino_username = ReadCredentials(credentials_path, credentials_type)
     username_element = driver.find_element(By.CSS_SELECTOR, "#emailAddress")
     username_element.click()
     username_element.send_keys(casino_username)
     time.sleep(input_time)
 
-    # Find password input + Add password + Sign-in
-    credentials_type = 'fortune_password'
-
-    casino_password = ReadCredentials(credentials_path, credentials_type)
+    # Find password input + Add password
     password_element = driver.find_element(By.CSS_SELECTOR, "#password")
     password_element.click()
     password_element.send_keys(casino_password)
     password_element.send_keys(Keys.ENTER)
-    time.sleep(100)
+    time.sleep(5)
     
-#   FARMING   # 
-# Uses selenium driver to aquire daily bonus on casino website (Fortune Coins)
+#  FARMING   # 
 
-def fortune_farming(driver, input_time): 
-    # Find 'BonusNotification' element + Click
-    BonusNotification = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(21) > div > div.modal.show > div > div > div.modal-body > div > button')
-    BonusNotification.click
+# FIXME: fix below code
+def fortune_farming(driver): 
+    # Input Timing Randomization (Anti-detection)
+    input_time = random.uniform(0.01, 2)
+
+    # Find 'bonus_notification' element + Click
+    bonus_notification = driver.find_element(By.CLASS_NAME, 'proceedButtton sp_proceed-daily-bonus-dialog btn btn-secondary')
+    bonus_notification.click
     time.sleep(input_time)
 
     # Find 'Daily Bonus' element + Click 
-    BonusElement = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(12) > div > div.modal.fade.show > div > div > div.modal-body > div:nth-child(1) > div.coinsRow > div > div > button')
-    BonusElement.click()
+    bonus_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(12) > div > div.modal.fade.show > div > div > div.modal-body > div:nth-child(1) > div.coinsRow > div > div > button')
+    bonus_element.click()
     time.sleep(input_time)
 
     # Find 'CloseSuccessfulBonus' element + Click
-    CloseSuccessfulBonus = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(13) > div > div.modal.show > div > div > button')
-    CloseSuccessfulBonus.click()
+    closed_successful_bonus = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(13) > div > div.modal.show > div > div > button')
+    closed_successful_bonus.click()
     time.sleep(input_time)
 
-#   POP-UP   # 
-# Function in charge of closing any pop-ups in 
+# #   POP-UP   # 
     
-def fortune_pop_up(driver):
-    pop_up_element = driver.find_element(By.CSS_SELECTOR'body > div:nth-child(19) > div > div.modal.show > div > div > div > div > div.pre-connect-info-dialog-wrapper-bottom > div')
+# def fortune_pop_up(driver):
+#     pop_up_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(19) > div > div.modal.show > div > div > div > div > div.pre-connect-info-dialog-wrapper-bottom > div')
 
 
 #   GLEANING   # 
@@ -145,5 +130,6 @@ def fortune_pop_up(driver):
 ## ----------------------
 
 # Uncomment + Run file 
-fortune_login(driver, casino_website)
+# fortune_login(driver, read_credentials)
+# fortune_farming(driver)
 # fortune_farming(driver)
