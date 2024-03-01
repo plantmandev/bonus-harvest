@@ -2,10 +2,7 @@
 #   STAKE US   # 
 #              # 
 
-#  
-
 #   INITIAL SET-UP   #
-
 import json
 import time
 import random
@@ -28,7 +25,6 @@ chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects
 driver = UC.Chrome(options)
 
 #   CREDENTIALS   # 
-
 def read_credentials(credential_type):
     credential_path = 'credentials.JSON'
     with open(credential_path, 'r') as file:
@@ -37,7 +33,6 @@ def read_credentials(credential_type):
     return credential_data.get(credential_type)
     
 #   LOGIN   # 
-
 def stake_login(driver, read_credentials):
     # Input Timing Randomization (Anti-detection)
     input_time = random.uniform(0.01, 2)
@@ -66,6 +61,7 @@ def stake_login(driver, read_credentials):
     password_element.send_keys(Keys.ENTER)
     time.sleep(25)
 
+#   FARMING   #
 def stake_farming(driver): 
     # Input Timing Randomization (Anti-detection)
     input_time = random.uniform(0.01, 2)

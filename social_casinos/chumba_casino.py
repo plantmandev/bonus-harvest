@@ -1,11 +1,8 @@
 #                   # 
 #   FORTUNE COINS   # 
-#                   # 
-
-# Fortune Coins is one of the best social casino websites used in this project. 
+#                   #  
 
 #   INITIAL SET-UP   #
-
 import json
 import time
 import random

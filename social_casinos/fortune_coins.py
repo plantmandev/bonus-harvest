@@ -2,10 +2,7 @@
 #   FORTUNE COINS   # 
 #                   # 
 
-# Fortune Coins is one of the best social casino websites used in this project. 
-
 #   INITIAL SET-UP   #
-
 import json
 import time
 import random
@@ -28,7 +25,6 @@ chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects
 driver = UC.Chrome(options)
 
 #   CREDENTIALS   # 
-
 def read_credentials(credential_type):
     credential_path = 'credentials.JSON'
     with open(credential_path, 'r') as file:
@@ -37,7 +33,6 @@ def read_credentials(credential_type):
     return credential_data.get(credential_type)
     
 #   LOGIN   # 
-
 def fortune_login(driver, read_credentials):
     # Input Timing Randomization (Anti-detection)
     input_time = random.uniform(0.01, 2)
@@ -72,7 +67,6 @@ def fortune_login(driver, read_credentials):
     time.sleep(5)
     
 #  FARMING   # 
-
 # FIXME: fix below code
 def fortune_farming(driver): 
     # Input Timing Randomization (Anti-detection)
