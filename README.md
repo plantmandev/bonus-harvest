@@ -112,3 +112,5 @@ https://www.letsplayslots.com/slots-rtp
 # Withdrawal options
 
 Connect crypto wallets to automate withdrawals
+
+# McLuck Requires playing at least every 50 days

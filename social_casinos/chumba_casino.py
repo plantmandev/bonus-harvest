@@ -14,16 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
 import undetected_chromedriver as UC
 
-#   ANTI-DETECTION   # 
-
-# Mask IP Address
-options = webdriver.ChromeOptions()
-options.add_argument('proxy-server = 138.234.226.100')
-
-# Use 'Undetected Chrome Driver' + Define path
-chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/bonus-harvest/chromedriver'
-driver = UC.Chrome(options)
-
 #   CREDENTIALS   # 
 def read_credentials(credential_type):
     credential_path = 'credentials.JSON'
@@ -81,6 +71,16 @@ def chumba_pop_up(driver):
     close_popup_element.click()
     time.sleep(input_time)
 
+#   ANTI-DETECTION   # 
 
+# Mask IP Address
+options = webdriver.ChromeOptions()
+options.add_argument('proxy-server = 138.234.226.100')
+
+# Use 'Undetected Chrome Driver' + Define path
+chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/bonus-harvest/chromedriver'
+driver = UC.Chrome(options)
 
 chumba_login(driver, read_credentials)
+
+#TODO: Chumba requires email authenticaiton. Make gmail work only (for now)

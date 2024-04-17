@@ -14,16 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
 import undetected_chromedriver as UC
 
-#   ANTI-DETECTION   # 
-
-# Mask IP Address
-options = webdriver.ChromeOptions()
-options.add_argument('proxy-server = 138.234.226.100')
-
-# Use 'Undetected Chrome Driver' + Define path
-chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/bonus-harvest/chromedriver'
-driver = UC.Chrome(options)
-
 #   CREDENTIALS   # 
 def read_credentials(credential_type):
     credential_path = 'credentials.JSON'
@@ -34,24 +24,14 @@ def read_credentials(credential_type):
     
 #   LOGIN   # 
 def fortune_login(driver, read_credentials):
-    # Input Timing Randomization (Anti-detection)
-    input_time = random.uniform(0.01, 2)
-
-    # Defines casino website URL
-    casino_website = 'https://www.fortunecoins.com/public-lobby'
-
     # Opens social casino website
     driver.get(casino_website)
     time.sleep(input_time)
 
     # Open Login page
-    login_element = driver.find_element(By.CSS_SELECTOR, '#__next > div.header-lobby-not-login > div > div.header-lobby-not-login-content > button')
+    login_element = driver.find_element(By.CSS_SELECTOR, '#__next > div.logged-out-header > div.desktop-logged-out-header > div > nav > div.login-button-container > button')
     login_element.click()
     time.sleep(input_time)
-
-    # Provides username + password credentials
-    casino_username = read_credentials('fortune_username')
-    casino_password = read_credentials('fortune_password')
 
     # Find username input + Add username
     username_element = driver.find_element(By.CSS_SELECTOR, "#emailAddress")
@@ -64,33 +44,57 @@ def fortune_login(driver, read_credentials):
     password_element.click()
     password_element.send_keys(casino_password)
     password_element.send_keys(Keys.ENTER)
-    time.sleep(5)
+    time.sleep(50) # FIXME: Change to input_time
+
+    # popup 
+    pop_up_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(19) > div > div.modal.show > div > div > div > div > div.pre-connect-info-dialog-wrapper-bottom > div')
+    pop_up_element.click()
+
+    # farming
+
+
+
+
+
+#   POP-UP   # 
+def fortune_pop_up(driver):
+    pop_up_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(19) > div > div.modal.show > div > div > div > div > div.pre-connect-info-dialog-wrapper-bottom > div')
+    pop_up_element.click()
+
+
     
 #  FARMING   # 
 # FIXME: fix below code
-def fortune_farming(driver): 
-    # Input Timing Randomization (Anti-detection)
-    input_time = random.uniform(0.01, 2)
+def fortune_farming(fortune_login): 
+    # Find 'ready_bonus_element' + Click
+    ready_bonus_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(31) > div > div.modal.show > div > div > div.modal-body > div > button')
+    ready_bonus_element.click()
 
     # Find 'bonus_notification' element + Click
-    bonus_notification = driver.find_element(By.CLASS_NAME, 'proceedButtton sp_proceed-daily-bonus-dialog btn btn-secondary')
-    bonus_notification.click
+    free_coin_element = driver.find_element(By.CLASS_NAME, '#__next > div.headerAuth > div > nav > div.headerButtons > div.coin-store-button > button')
+    free_coin_element.click
     time.sleep(input_time)
 
-    # Find 'Daily Bonus' element + Click 
-    bonus_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(12) > div > div.modal.fade.show > div > div > div.modal-body > div:nth-child(1) > div.coinsRow > div > div > button')
-    bonus_element.click()
+    # Find 'collect_bonus_element' element + Click 
+    collect_bonus_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(22) > div > div.modal.fade.show > div > div > div.modal-body > div:nth-child(1) > div.coinsRow > div:nth-child(1) > div > div.daily-bonus-buttons-wrapper')
+    collect_bonus_element.click()
     time.sleep(input_time)
 
-    # Find 'CloseSuccessfulBonus' element + Click
-    closed_successful_bonus = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(13) > div > div.modal.show > div > div > button')
-    closed_successful_bonus.click()
+    # Find 'close_successful_bonus_element' element + Click
+    closed_successful_bonus_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(22) > div > div.modal.fade.show > div > div > button')
+    closed_successful_bonus_element.click()
     time.sleep(input_time)
 
-# #   POP-UP   # 
-    
-# def fortune_pop_up(driver):
-#     pop_up_element = driver.find_element(By.CSS_SELECTOR, 'body > div:nth-child(19) > div > div.modal.show > div > div > div > div > div.pre-connect-info-dialog-wrapper-bottom > div')
+    # Find total FC count + Click
+    FC_element = driver.find_element(By.CSS_SELECTOR, '#__next > div.headerAuth > div > nav > div.headerAuthCenter > div > div > div.FCButtonItem.sp_fc-__SPPN__-header.FCoins > button > img')
+    FC_element.click()
+
+    # Find FC balance 
+    FC_balance_element = driver.find_element( By.CSS_SELECTOR, '#__next > div.headerAuth > div.headerContainer > nav > div.headerAuthCenter > div > div > div.FCDropDown > div > div:nth-child(3) > h3')
+    FC_balance_element.getText()
+
+
+
 
 
 #   GLEANING   # 
@@ -123,7 +127,26 @@ def fortune_farming(driver):
 
 ## ----------------------
 
+# Defines casino website URL
+casino_website = 'https://www.fortunecoins.com/public-lobby'
+
+# Mask IP Address
+options = webdriver.ChromeOptions()
+options.add_argument('proxy-server = 138.234.226.100')
+
+# Use 'Undetected Chrome Driver' + Define path
+chrome_driver_path = '/Users/gabrielguzman/Documents/Visual Studio Code/Projects/bonus-harvest/chromedriver'
+driver = UC.Chrome(options)
+
+# Input Timing Randomization (Anti-detection)
+input_time = random.uniform(0.01, 2)
+
+# Username + password credentials
+casino_username = read_credentials('fortune_username')
+casino_password = read_credentials('fortune_password')
+
+## ------------------------
+
 # Uncomment + Run file 
-# fortune_login(driver, read_credentials)
-# fortune_farming(driver)
-# fortune_farming(driver)
+fortune_login(driver, read_credentials)
+fortune_farming(fortune_login)
