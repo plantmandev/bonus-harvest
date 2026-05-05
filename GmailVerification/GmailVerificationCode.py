@@ -1,38 +1,61 @@
-# import base64
-# import os.path
-# import json
-# from google.auth.transport.requests import Request
-# from google.oauth2.credentials import Credentials
-# from google_auth_oauthlib.flow import InstalledAppFlow
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
+import re
+import time
+import base64
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 
-# def search_and_extract(service, user_id, search_query):
-#     try:
-        
-#         # Call the Gmail API
-#         service = build("gmail", "v1", credentials=creds)
+from GmailAPI import get_gmail_service
 
-#         # Specify the email subject to search for
-#         search_subject = "x"
 
-#         # Search for emails with the specified subject
-#         response = service.users().messages().list(userId=user_id, q=search_query).execute()
-#         messages = response.get('messages', [])
+def get_verification_code(sender_query, received_after=None, timeout=90, poll_interval=4):
+    """Poll Gmail for a verification email and extract the first 6-digit code found.
 
-#         if not messages:
-#             print("No emails found with the specified subject.")
-#             return None
+    received_after: Unix timestamp — only emails received at or after this time are considered.
+    """
+    service = get_gmail_service()
+    deadline = time.time() + timeout
+    after_clause = f' after:{int(received_after)}' if received_after else ' newer_than:2m'
 
-#         # Retrieve the content of the first matching email
-#         message_id = messages[0]['id']
-#         message = service.users().messages().get(userId=user_id, id=message_id).execute()
+    while time.time() < deadline:
+        results = service.users().messages().list(
+            userId='me',
+            q=f'from:{sender_query}{after_clause}',
+            maxResults=5
+        ).execute()
 
-#         # Extract email content
-#         email_data = {
-#             'subject': message['subject'],
-#             'from': message['payload']['headers'][1]['value'],  # Assuming 'From' header is at index 1
-#             'body': base64.urlsafe_b64decode(message['payload']['body']['data']).decode('utf-8')
-#         }
+        messages = results.get('messages', [])
+        for message in messages:
+            msg = service.users().messages().get(
+                userId='me',
+                id=message['id'],
+                format='full'
+            ).execute()
 
-#         return email_data
+            # Skip emails received before login was submitted
+            msg_time = int(msg['internalDate']) / 1000
+            if received_after and msg_time < received_after:
+                continue
+
+            body = _decode_body(msg['payload'])
+            match = re.search(r'\b(\d{6})\b', body)
+            if match:
+                return match.group(1)
+
+        time.sleep(poll_interval)
+
+    raise TimeoutError(f'No verification code from "{sender_query}" received within {timeout}s')
+
+
+def _decode_body(payload):
+    parts = payload.get('parts', [])
+    if parts:
+        for part in parts:
+            if part['mimeType'] == 'text/plain':
+                data = part.get('body', {}).get('data', '')
+                if data:
+                    return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+    data = payload.get('body', {}).get('data', '')
+    if data:
+        return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+    return ''

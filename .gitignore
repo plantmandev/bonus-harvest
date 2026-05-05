@@ -8,8 +8,9 @@ social_casinos/__pycache__
 # chromedriver
 chromedriver
 
-# Social Casino Credentials 
+# Social Casino Credentials
 credentials.JSON
+.env
 
 # Quarto Preview
 README.html

@@ -1,43 +1,35 @@
-#                # 
-# INITIAL SET-UP #
-#                # 
-
-import base64
-import os.path
-import json
+import os
+from pathlib import Path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
-#              # 
-# VERIFICATION # 
-#              # 
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
-# Defines script privileges to 'READ-ONLY' and 'WRITE'
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify']
+_DIR = Path(__file__).parent
+TOKEN_PATH = _DIR / 'token.json'
+CREDENTIALS_PATH = _DIR / 'credentials.json'
 
-def GmailAPI():
-    # Creates 'creds' variable
+
+def get_gmail_service():
     creds = None
-    
-    # If token.json already exists, credentials are pulled from token.json
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
-    # If token.json does not exist OR token.json is invalid, credentials are refreshed
+    if TOKEN_PATH.exists():
+        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-            # Else, open Gmail authorization page using credentials.json to authorize token.json generation
         else:
-            # Use os.path.join to construct the correct path
-            credentials_path = os.path.join(os.path.dirname(__file__), "credentials.json")
-            flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+            flow = InstalledAppFlow.from_client_secrets_file(str(CREDENTIALS_PATH), SCOPES)
+            creds = flow.run_local_server(port=8080, open_browser=False)
+        with open(TOKEN_PATH, 'w') as f:
+            f.write(creds.to_json())
 
-if __name__ == "__main__":
-    GmailAPI()
+    return build('gmail', 'v1', credentials=creds)
+
+
+if __name__ == '__main__':
+    get_gmail_service()
+    print('token.json saved — Gmail authorized.')
