@@ -18,16 +18,9 @@ class StakeUS(BaseCasino):
     PASSWORD         = (By.NAME, 'password')
     EMAIL_CODE_INPUT = (By.CSS_SELECTOR, 'input[type="text"]')
     EMAIL_CODE_BTN   = (By.XPATH, '//button[normalize-space()="Sign In"]')
-    WALLET           = (By.CSS_SELECTOR, (
-        '#svelte > div.wrap.svelte-twylll > div.main-content.svelte-twylll > '
-        'div.navigation.svelte-78xyui > div > div > div > '
-        'div.balance-toggle.svelte-1rik8j6 > button'
-    ))
-    BONUS            = (By.CSS_SELECTOR, (
-        '#svelte > div.modal.svelte-vepx8a > div.card.svelte-vepx8a > '
-        'div.content.scrollY.scroll-contain.svelte-vepx8a > div > div > '
-        'div.center-wrapper.svelte-fax2rm > div > div > div > button:nth-child(3) > span'
-    ))
+    WALLET           = (By.CSS_SELECTOR, '[data-testid="wallet"]')
+    DAILY_BONUS      = (By.CSS_SELECTOR, '[data-testid="dailyBonus"]')
+    CLAIM_BONUS      = (By.XPATH, '//button[normalize-space()="Claim Daily Bonus"]')
 
     def login(self):
         username = read_credentials('stake_username')
@@ -56,7 +49,10 @@ class StakeUS(BaseCasino):
 
     def farm(self):
         self.click(self.WALLET)
-        self.click(self.BONUS)
+        self.click(self.DAILY_BONUS)
+        self.click(self.CLAIM_BONUS)
+        # TODO: replace with WebDriverWait once success element CSS is known
+        time.sleep(10)
 
 
 if __name__ == '__main__':
