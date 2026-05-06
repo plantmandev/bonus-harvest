@@ -1,0 +1,15 @@
+[Unit]
+Description=Stake.us Daily Bonus Harvest
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=YOUR_USER
+WorkingDirectory=/path/to/bonus-harvest
+ExecStart=/path/to/bonus-harvest/scripts/run_stake.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

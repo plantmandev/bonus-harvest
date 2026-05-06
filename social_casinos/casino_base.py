@@ -21,6 +21,10 @@ def read_credentials(credential_type):
 
 def create_driver():
     options = webdriver.ChromeOptions()
+    if os.getenv('SERVER_MODE', '').lower() in ('1', 'true', 'yes'):
+        # Required for running Chrome inside containers (no sandbox, shared memory workaround)
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
     proxy = os.getenv('PROXY_SERVER')
     if proxy:
         options.add_argument(f'--proxy-server={proxy}')
