@@ -22,12 +22,14 @@ if ! pgrep -f "Xvfb :$DISPLAY_NUM" > /dev/null; then
     sleep 1
 fi
 
-source "$HOME/bonus-harvest/bin/activate"
+source "$PROJECT_DIR/bonus-harvest/bin/activate"
 
 cd "$PROJECT_DIR"
 if python3 social_casinos/stake_us.py >> "$LOG_FILE" 2>&1; then
     log "Harvest completed successfully"
 else
-    log "Harvest failed — exit code $?"
-    exit 1
+    EXIT_CODE=$?
+    log "Harvest failed — exit code $EXIT_CODE"
+    python3 "$SCRIPT_DIR/notify_failure.py" --casino "Stake.us" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
+    exit "$EXIT_CODE"
 fi

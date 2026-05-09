@@ -6,7 +6,7 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_USER="${SUDO_USER:-$(whoami)}"
 SERVICE_DIR="/etc/systemd/system"
-VENV="$HOME/bonus-harvest"
+VENV="$PROJECT_DIR/bonus-harvest"
 
 # ── system packages ──────────────────────────────────────────────────────────
 echo "[setup] Installing system packages..."
@@ -30,8 +30,7 @@ fi
 # shellcheck source=/dev/null
 source "$VENV/bin/activate"
 pip install -q --upgrade pip
-pip install -q setuptools selenium undetected-chromedriver python-dotenv \
-    google-api-python-client google-auth-oauthlib google-auth-httplib2
+pip install -q -r "$PROJECT_DIR/requirements.txt"
 
 # ── .env ──────────────────────────────────────────────────────────────────────
 ENV_FILE="$PROJECT_DIR/.env"
