@@ -24,7 +24,7 @@ fi
 source "$PROJECT_DIR/bonus-harvest/bin/activate"
 
 cd "$PROJECT_DIR"
-if python3 social_casinos/run_all.py >> "$LOG_FILE" 2>&1; then
+if python3 run_all.py >> "$LOG_FILE" 2>&1; then
     log "All sites completed successfully"
 else
     EXIT_CODE=$?

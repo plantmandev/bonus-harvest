@@ -25,7 +25,7 @@ fi
 source "$PROJECT_DIR/bonus-harvest/bin/activate"
 
 cd "$PROJECT_DIR"
-if python3 social_casinos/stake_us.py >> "$LOG_FILE" 2>&1; then
+if python3 -m casinos.stake_us >> "$LOG_FILE" 2>&1; then
     log "Harvest completed successfully"
 else
     EXIT_CODE=$?

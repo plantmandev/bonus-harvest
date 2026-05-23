@@ -1,15 +1,12 @@
 import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import time
-from casino_base import BaseCasino, read_credentials
-from notify import notify
-from GmailVerification.GmailVerificationCode import get_verification_code
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
+
+from .base import BaseCasino, read_credentials, notify
+from auth.gmail import get_verification_code
 
 
 class StakeUS(BaseCasino):
@@ -22,7 +19,6 @@ class StakeUS(BaseCasino):
     DAILY_BONUS      = (By.CSS_SELECTOR, '[data-testid="dailyBonus"]')
     CLAIM_BONUS      = (By.XPATH, '//button[normalize-space()="Claim Daily Bonus"]')
     ALREADY_CLAIMED  = (By.XPATH, '//*[contains(text(),"Come back tomorrow")]')
-    # TODO: verify this selector against the live post-claim screen
     BALANCE          = (By.CSS_SELECTOR, '[data-testid="wallet"] [data-testid="balance"]')
 
     def login(self):
@@ -32,7 +28,7 @@ class StakeUS(BaseCasino):
         notify('Navigating to Stake.us login')
         self.driver.get(self.URL)
         self.type_into(self.USERNAME, username)
-        pass_el = self.type_into(self.PASSWORD, password)
+        pass_el    = self.type_into(self.PASSWORD, password)
         login_time = time.time()
         pass_el.send_keys(Keys.ENTER)
 
@@ -50,20 +46,29 @@ class StakeUS(BaseCasino):
         notify('Login successful', 'SUCCESS')
 
     def farm(self):
-        already_claimed = self.driver.find_elements(*self.ALREADY_CLAIMED)
-        if already_claimed:
-            notify('Daily bonus already claimed — nothing to do', 'INFO')
+        self.screenshot('farm_start')
+
+        if self.driver.find_elements(*self.ALREADY_CLAIMED):
+            notify('Daily bonus already claimed — nothing to do')
+            self.screenshot('already_claimed')
             return
 
+        notify('Clicking wallet...')
         self.click(self.WALLET)
+        self.screenshot('after_wallet')
+
+        notify('Clicking daily bonus...')
         self.click(self.DAILY_BONUS)
+        self.screenshot('after_daily_bonus')
+
+        notify('Clicking claim button...')
         self.click(self.CLAIM_BONUS)
+        self.screenshot('after_claim')
 
-        self.wait.until(EC.staleness_of(
-            self.driver.find_element(*self.CLAIM_BONUS)
-        ))
-
+        self.wait.until(EC.staleness_of(self.driver.find_element(*self.CLAIM_BONUS)))
+        self.screenshot('claim_complete')
         balance = self._read_balance()
+        self.record_balance(balance)
         notify(f'Daily bonus claimed — balance: {balance}', 'SUCCESS')
 
     def _read_balance(self):
@@ -71,7 +76,7 @@ class StakeUS(BaseCasino):
             el = self.wait.until(EC.presence_of_element_located(self.BALANCE))
             return el.text.strip() or 'unknown'
         except Exception:
-            return 'unavailable (verify BALANCE selector)'
+            return 'unavailable'
 
 
 if __name__ == '__main__':

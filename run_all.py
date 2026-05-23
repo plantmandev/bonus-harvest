@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Run every casino in social_casinos/ sequentially.
+"""Run every casino in casinos/ sequentially.
 
-Discovery: any .py file in this directory (except casino_base and notify)
-that contains a BaseCasino subclass is treated as a casino and run.
-To add a new site, drop a file here — no other changes needed.
+Discovery: any .py file in casinos/ (except base) that contains a BaseCasino
+subclass is picked up automatically. Drop a new file there — no other changes needed.
 """
 import importlib
 import inspect
@@ -11,21 +10,17 @@ import sys
 import traceback
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from casinos.base import BaseCasino, notify
 
-from casino_base import BaseCasino
-from notify import notify
-
-SKIP = {'casino_base', 'notify', 'run_all'}
+SKIP = {'base', '__init__'}
 
 
 def discover():
     casinos = []
-    for path in sorted(Path(__file__).parent.glob('*.py')):
+    for path in sorted(Path('casinos').glob('*.py')):
         if path.stem in SKIP:
             continue
-        mod = importlib.import_module(path.stem)
+        mod = importlib.import_module(f'casinos.{path.stem}')
         for _, cls in inspect.getmembers(mod, inspect.isclass):
             if issubclass(cls, BaseCasino) and cls is not BaseCasino:
                 casinos.append((path.stem, cls))
@@ -47,17 +42,16 @@ def main():
         try:
             cls().run()
             results[name] = 'OK'
-            notify(f'{cls.__name__} completed successfully')
+            notify(f'{cls.__name__} completed', 'SUCCESS')
         except Exception:
             results[name] = 'FAILED'
             notify(f'{cls.__name__} failed:\n{traceback.format_exc()}', 'ERROR')
 
     passed = [n for n, r in results.items() if r == 'OK']
     failed = [n for n, r in results.items() if r == 'FAILED']
-
-    notify(f'Harvest complete — {len(passed)} passed, {len(failed)} failed')
+    notify(f'Done — {len(passed)} passed, {len(failed)} failed')
     if failed:
-        notify(f'Failed sites: {", ".join(failed)}', 'ERROR')
+        notify(f'Failed: {", ".join(failed)}', 'ERROR')
         sys.exit(1)
 
 
