@@ -1,9 +1,11 @@
 # Gmail OAuth Keys + Token
 GmailVerification/credentials.json
 GmailVerification/token.json
+auth/token.json
 
-# Selenium Cache
-social_casinos/__pycache__
+# Python cache
+**/__pycache__
+*.pyc
 
 # chromedriver
 chromedriver
