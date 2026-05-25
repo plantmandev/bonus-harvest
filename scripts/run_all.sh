@@ -32,3 +32,6 @@ else
     python3 "$SCRIPT_DIR/notify_failure.py" --casino "Bonus Harvest" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
     exit "$EXIT_CODE"
 fi
+
+log "Sending balance report..."
+python3 -m data_analysis.report >> "$LOG_FILE" 2>&1 && log "Report sent" || log "Report failed — check log"

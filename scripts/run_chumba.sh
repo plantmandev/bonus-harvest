@@ -4,7 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
-LOG_FILE="$LOG_DIR/chumba_$(date +%Y-%m-%d).log"
+LOG_FILE="$LOG_DIR/chumba_$(date +%Y-%m-%d_%H%M).log"
+NEXT_RUN_FILE="$LOG_DIR/chumba_next_run.txt"
 
 mkdir -p "$LOG_DIR"
 
@@ -31,4 +32,21 @@ else
     log "Harvest failed — exit code $EXIT_CODE"
     python3 "$SCRIPT_DIR/notify_failure.py" --casino "Chumba Casino" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
     exit "$EXIT_CODE"
+fi
+
+# ── schedule next run ─────────────────────────────────────────────────────────
+if [ -f "$NEXT_RUN_FILE" ]; then
+    NEXT_RUN=$(cat "$NEXT_RUN_FILE")
+    rm "$NEXT_RUN_FILE"
+
+    # Convert ISO timestamp to `at` format: HH:MM YYYY-MM-DD
+    AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d' 2>/dev/null) || {
+        log "Could not parse next run time '$NEXT_RUN' — skipping auto-schedule"
+        exit 0
+    }
+
+    echo "bash $SCRIPT_DIR/run_chumba.sh" | at "$AT_TIME" 2>>"$LOG_FILE"
+    log "Next run scheduled for $NEXT_RUN"
+else
+    log "No next run file found — skipping auto-schedule"
 fi
