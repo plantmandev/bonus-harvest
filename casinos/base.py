@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -46,9 +46,13 @@ def create_driver():
 
 class BaseCasino:
     def __init__(self):
+        self._name  = self.__class__.__name__
+        self.driver = None
+        self.wait   = None
+
+    def _start_driver(self):
         self.driver = create_driver()
         self.wait   = WebDriverWait(self.driver, WAIT_TIMEOUT)
-        self._name  = self.__class__.__name__
 
     def screenshot(self, label: str):
         SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -62,7 +66,7 @@ class BaseCasino:
     def login(self):
         raise NotImplementedError
 
-    def farm(self):
+    def farm(self) -> timedelta | None:
         raise NotImplementedError
 
     def glean(self):
@@ -71,14 +75,38 @@ class BaseCasino:
     def harvest(self):
         pass  # withdraw when balance threshold is met — not yet implemented
 
+    def _is_due(self) -> bool:
+        next_run_file = Path(__file__).parent.parent / 'logs' / f'{self._casino_key()}_next_run.txt'
+        if not next_run_file.exists():
+            return True
+        try:
+            next_run = datetime.fromisoformat(next_run_file.read_text().strip())
+            return datetime.now() >= next_run
+        except Exception:
+            return True
+
     def run(self):
+        if not self._is_due():
+            notify(f'Not yet due — skipping')
+            return
+        self._start_driver()
         try:
             self.login()
-            self.farm()
+            delta = self.farm()
             self.glean()
             self.harvest()
+            self._write_next_run(delta)
         finally:
             self.driver.quit()
+
+    def _write_next_run(self, delta: timedelta | None):
+        if delta is None:
+            delta = timedelta(hours=24)
+        next_run = datetime.now() + delta
+        next_run_file = Path(__file__).parent.parent / 'logs' / f'{self._casino_key()}_next_run.txt'
+        next_run_file.parent.mkdir(exist_ok=True)
+        next_run_file.write_text(next_run.strftime('%Y-%m-%dT%H:%M'))
+        notify(f'Next run at {next_run.strftime("%Y-%m-%d %H:%M")}')
 
     def record_balance(self, raw_text: str):
         try:

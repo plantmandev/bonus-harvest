@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CASINO_KEY="${1:?Usage: run_casino.sh <casino_key>}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
-LOG_FILE="$LOG_DIR/harvest_$(date +%Y-%m-%d).log"
+LOG_FILE="$LOG_DIR/${CASINO_KEY}_$(date +%Y-%m-%d_%H%M).log"
 
 mkdir -p "$LOG_DIR"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 
-log "Starting harvest for all sites"
+log "Starting $CASINO_KEY harvest"
 
 DISPLAY_NUM=99
 export DISPLAY=:$DISPLAY_NUM
@@ -24,15 +25,12 @@ fi
 source "$PROJECT_DIR/bonus-harvest/bin/activate"
 
 cd "$PROJECT_DIR"
-if python3 run_all.py >> "$LOG_FILE" 2>&1; then
-    log "All sites completed successfully"
+if python3 -m "casinos.$CASINO_KEY" >> "$LOG_FILE" 2>&1; then
+    log "Harvest completed successfully"
 else
     EXIT_CODE=$?
     log "Harvest failed — exit code $EXIT_CODE"
-    python3 "$SCRIPT_DIR/notify_failure.py" --casino "Bonus Harvest" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
+    python3 "$SCRIPT_DIR/notify_failure.py" --casino "$CASINO_KEY" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
     exit "$EXIT_CODE"
 fi
-
-log "Sending balance report..."
-python3 -m data_analysis.report >> "$LOG_FILE" 2>&1 && log "Report sent" || log "Report failed — check log"
 

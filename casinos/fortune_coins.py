@@ -1,5 +1,6 @@
 import sys
 import time
+from datetime import timedelta
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -18,8 +19,13 @@ class FortuneCoins(BaseCasino):
     USERNAME        = (By.CSS_SELECTOR, '#emailAddress')
     PASSWORD        = (By.CSS_SELECTOR, '#password')
 
-    BONUS_POPUP_BTN  = (By.CSS_SELECTOR, '.transparent-close-popup-button')
     BONUS_POPUP_WAIT = 10
+    BONUS_POPUP_SELECTORS = [
+        (By.CSS_SELECTOR, '.transparent-close-popup-button'),
+        (By.CSS_SELECTOR, '.modal.fade.show button.close'),
+        (By.CSS_SELECTOR, '.modal.fade.show [data-dismiss="modal"]'),
+        (By.XPATH,        '//div[contains(@class,"modal") and contains(@class,"show")]//button[contains(@class,"close")]'),
+    ]
 
     # TODO: verify selectors against live site
     COIN_STORE_BTN = (By.CSS_SELECTOR, '.coin-store-button button')
@@ -72,13 +78,15 @@ class FortuneCoins(BaseCasino):
 
     def _dismiss_bonus_popup(self):
         w = WebDriverWait(self.driver, self.BONUS_POPUP_WAIT)
-        try:
-            btn = w.until(EC.element_to_be_clickable(self.BONUS_POPUP_BTN))
-            self.driver.execute_script('arguments[0].click()', btn)
-        except TimeoutException:
-            pass
+        for locator in self.BONUS_POPUP_SELECTORS:
+            try:
+                btn = w.until(EC.element_to_be_clickable(locator))
+                self.driver.execute_script('arguments[0].click()', btn)
+                return
+            except TimeoutException:
+                pass
 
-    def farm(self):
+    def farm(self) -> timedelta:
         self.screenshot('farm_start')
 
         notify('Clicking coin store...')
@@ -98,6 +106,7 @@ class FortuneCoins(BaseCasino):
         balance = balance_el.text.strip()
         self.record_balance(balance)
         notify(f'Daily bonus claimed — balance: {balance}', 'SUCCESS')
+        return timedelta(hours=24)
 
 
 if __name__ == '__main__':

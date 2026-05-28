@@ -13,13 +13,10 @@ from selenium.common.exceptions import TimeoutException
 from .base import BaseCasino, read_credentials, notify
 from auth.gmail import get_verification_code
 
-NEXT_RUN_FILE = Path(__file__).parent.parent / 'logs' / 'chumba_next_run.txt'
 SCHEDULE_BUFFER_MINUTES = 5  # run slightly after bonus resets to ensure availability
 
 
 class ChumbaCasino(BaseCasino):
-    DYNAMIC_SCHEDULE = True  # self-schedules via at(1) — excluded from fixed cron
-
     URL = 'https://login.chumbacasino.com/'
 
     USERNAME       = (By.NAME, 'email')
@@ -106,7 +103,7 @@ class ChumbaCasino(BaseCasino):
 
     # ── farm ───────────────────────────────────────────────────────────────────
 
-    def farm(self):
+    def farm(self) -> timedelta:
         self.screenshot('farm_start')
         self.dismiss_popups()
 
@@ -129,7 +126,11 @@ class ChumbaCasino(BaseCasino):
         self.record_balance(balance)
         notify(f'Daily bonus claimed — balance: {balance}', 'SUCCESS')
 
-        self._schedule_next_run()
+        delta = self._read_next_bonus_delta()
+        if delta is None:
+            notify('Could not read next bonus timer — defaulting to 24h', 'WARNING')
+            return timedelta(hours=24)
+        return delta + timedelta(minutes=SCHEDULE_BUFFER_MINUTES)
 
     # ── balance ────────────────────────────────────────────────────────────────
 
@@ -146,17 +147,6 @@ class ChumbaCasino(BaseCasino):
             return 'unavailable'
 
     # ── dynamic scheduling ─────────────────────────────────────────────────────
-
-    def _schedule_next_run(self):
-        delta = self._read_next_bonus_delta()
-        if delta is None:
-            notify('Could not read next bonus timer — defaulting to 24h', 'WARNING')
-            delta = timedelta(hours=24)
-
-        next_run = datetime.now() + delta + timedelta(minutes=SCHEDULE_BUFFER_MINUTES)
-        NEXT_RUN_FILE.parent.mkdir(exist_ok=True)
-        NEXT_RUN_FILE.write_text(next_run.strftime('%Y-%m-%dT%H:%M'))
-        notify(f'Next Chumba run scheduled for {next_run.strftime("%Y-%m-%d %H:%M")}')
 
     def _read_next_bonus_delta(self) -> timedelta | None:
         try:
