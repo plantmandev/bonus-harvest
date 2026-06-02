@@ -24,8 +24,13 @@ class StakeUS(BaseCasino):
     DAILY_BONUS      = (By.CSS_SELECTOR, '[data-testid="dailyBonus"]')
     CLAIM_BONUS      = (By.XPATH, '//button[normalize-space()="Claim Daily Bonus"]')
     ALREADY_CLAIMED  = (By.XPATH, '//*[contains(text(),"Come back tomorrow")]')
-    BALANCE          = (By.CSS_SELECTOR, '[data-testid="wallet"] [data-testid="balance"]')
     WALLET_ERROR     = (By.XPATH, '//*[contains(text(),"something") and contains(text(),"wrong")]')
+    # SC balance: value box sits directly above "Stake Cash" label in the Daily Bonus tab
+    SC_BALANCE       = (By.XPATH, '//*[normalize-space(text())="Stake Cash"]/preceding-sibling::*[1]')
+    # Countdown elements: number sits before its unit label
+    TIMER_DAY        = (By.XPATH, '//*[normalize-space(text())="Day"]/preceding-sibling::*[1]')
+    TIMER_HOUR       = (By.XPATH, '//*[normalize-space(text())="Hour"]/preceding-sibling::*[1]')
+    TIMER_MIN        = (By.XPATH, '//*[normalize-space(text())="Min"]/preceding-sibling::*[1]')
 
     def login(self):
         username = read_credentials('stake_username')
@@ -73,10 +78,10 @@ class StakeUS(BaseCasino):
 
         self.wait.until(EC.staleness_of(self.driver.find_element(*self.CLAIM_BONUS)))
         self.screenshot('claim_complete')
-        balance = self._read_balance()
+        balance = self._read_sc_balance()
         self.record_balance(balance)
         notify(f'Daily bonus claimed — balance: {balance}', 'SUCCESS')
-        return timedelta(hours=24)
+        return self._read_next_claim_delta()
 
     def _open_wallet_with_retry(self):
         for attempt in range(1, WALLET_MAX_RETRIES + 1):
@@ -89,12 +94,24 @@ class StakeUS(BaseCasino):
             time.sleep(2)
         raise RuntimeError('Wallet error persisted after retries — aborting')
 
-    def _read_balance(self):
+    def _read_sc_balance(self) -> str:
         try:
-            el = self.wait.until(EC.presence_of_element_located(self.BALANCE))
-            return el.text.strip() or 'unknown'
+            el = self.wait.until(EC.presence_of_element_located(self.SC_BALANCE))
+            value = (el.get_attribute('value') or el.text).strip()
+            return f'{value} SC'
         except Exception:
             return 'unavailable'
+
+    def _read_next_claim_delta(self) -> timedelta:
+        try:
+            days  = int(self.driver.find_element(*self.TIMER_DAY).text.strip()  or 0)
+            hours = int(self.driver.find_element(*self.TIMER_HOUR).text.strip() or 0)
+            mins  = int(self.driver.find_element(*self.TIMER_MIN).text.strip()  or 0)
+            notify(f'Next claim in {days}d {hours}h {mins}m')
+            return timedelta(days=days, hours=hours, minutes=mins + 1)
+        except Exception:
+            notify('Could not read next claim timer — defaulting to 24h', 'WARNING')
+            return timedelta(hours=24)
 
 
 if __name__ == '__main__':

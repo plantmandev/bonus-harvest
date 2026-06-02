@@ -23,7 +23,10 @@ def discover():
         mod = importlib.import_module(f'casinos.{path.stem}')
         for _, cls in inspect.getmembers(mod, inspect.isclass):
             if issubclass(cls, BaseCasino) and cls is not BaseCasino:
-                casinos.append((path.stem, cls))
+                if getattr(cls, 'DISABLED', False):
+                    notify(f'Skipping {cls.__name__} — disabled')
+                else:
+                    casinos.append((path.stem, cls))
                 break
     return casinos
 

@@ -24,15 +24,49 @@ fi
 source "$PROJECT_DIR/bonus-harvest/bin/activate"
 
 cd "$PROJECT_DIR"
-if python3 run_all.py >> "$LOG_FILE" 2>&1; then
+
+# Capture exit code without letting it kill the script — report must always send
+HARVEST_EXIT=0
+python3 run_all.py >> "$LOG_FILE" 2>&1 || HARVEST_EXIT=$?
+
+if [ "$HARVEST_EXIT" -eq 0 ]; then
     log "All sites completed successfully"
 else
-    EXIT_CODE=$?
-    log "Harvest failed — exit code $EXIT_CODE"
-    python3 "$SCRIPT_DIR/notify_failure.py" --casino "Bonus Harvest" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
-    exit "$EXIT_CODE"
+    log "Harvest had failures — exit code $HARVEST_EXIT"
+    python3 "$SCRIPT_DIR/notify_failure.py" --casino "Bonus Harvest" --log "$LOG_FILE" --exit-code "$HARVEST_EXIT" || true
 fi
 
-log "Sending balance report..."
+# Always send the daily report regardless of harvest outcome
+log "Sending daily balance report..."
 python3 -m data_analysis.report >> "$LOG_FILE" 2>&1 && log "Report sent" || log "Report failed — check log"
 
+# Schedule each casino's next precise run via at
+_schedule_casino() {
+    local KEY="$1" FILE="$2"
+    local NEXT_RUN AT_TIME AT_EPOCH NOW_EPOCH CMD
+    NEXT_RUN=$(cat "$FILE")
+    AT_EPOCH=$(date -d "$NEXT_RUN" +%s 2>/dev/null) || {
+        log "Could not parse next run for $KEY: '$NEXT_RUN' — skipping"
+        return
+    }
+    NOW_EPOCH=$(date +%s)
+    CMD="bash $SCRIPT_DIR/run_casino.sh $KEY"
+    if [ "$AT_EPOCH" -le "$NOW_EPOCH" ]; then
+        # Stale timestamp — run soon instead of blocking on a past time
+        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
+            && log "Next $KEY run scheduled immediately (stale timestamp)" \
+            || log "WARNING: could not schedule $KEY via at"
+    else
+        AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d')
+        echo "$CMD" | at "$AT_TIME" 2>>"$LOG_FILE" \
+            && log "Next $KEY run scheduled for $NEXT_RUN" \
+            || log "WARNING: could not schedule $KEY via at"
+    fi
+}
+
+for NEXT_RUN_FILE in "$LOG_DIR"/*_next_run.txt; do
+    [ -f "$NEXT_RUN_FILE" ] || continue
+    _schedule_casino "$(basename "$NEXT_RUN_FILE" _next_run.txt)" "$NEXT_RUN_FILE"
+done
+
+exit "$HARVEST_EXIT"

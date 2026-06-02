@@ -13,10 +13,12 @@ from selenium.common.exceptions import TimeoutException
 from .base import BaseCasino, read_credentials, notify
 from auth.gmail import get_verification_code
 
-SCHEDULE_BUFFER_MINUTES = 5  # run slightly after bonus resets to ensure availability
+SCHEDULE_BUFFER_MINUTES = 1  # 1 min after timer expires to ensure reset has propagated
 
 
 class ChumbaCasino(BaseCasino):
+    DISABLED = True  # no SC daily bonus as of June 2026
+
     URL = 'https://login.chumbacasino.com/'
 
     USERNAME       = (By.NAME, 'email')

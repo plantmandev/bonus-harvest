@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/${CASINO_KEY}_$(date +%Y-%m-%d_%H%M).log"
+NEXT_RUN_FILE="$LOG_DIR/${CASINO_KEY}_next_run.txt"
 
 mkdir -p "$LOG_DIR"
 
@@ -34,3 +35,24 @@ else
     exit "$EXIT_CODE"
 fi
 
+# ── schedule next precise run via at ─────────────────────────────────────────
+if [ -f "$NEXT_RUN_FILE" ]; then
+    NEXT_RUN=$(cat "$NEXT_RUN_FILE")
+    AT_EPOCH=$(date -d "$NEXT_RUN" +%s 2>/dev/null) || {
+        log "Could not parse next run time '$NEXT_RUN' — skipping auto-schedule"
+        exit 0
+    }
+    CMD="bash $SCRIPT_DIR/run_casino.sh $CASINO_KEY"
+    if [ "$AT_EPOCH" -le "$(date +%s)" ]; then
+        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
+            && log "Next run scheduled immediately (stale timestamp)" \
+            || log "WARNING: could not schedule via at"
+    else
+        AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d')
+        echo "$CMD" | at "$AT_TIME" 2>>"$LOG_FILE" \
+            && log "Next run scheduled for $NEXT_RUN" \
+            || log "WARNING: could not schedule via at"
+    fi
+else
+    log "No next run file — re-run run_all.sh to bootstrap"
+fi

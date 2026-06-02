@@ -28,7 +28,7 @@ def notify(message: str, level: str = 'INFO'):
 
 def read_credentials(key: str) -> str:
     value = os.getenv(key.upper())
-    if value is None:
+    if not value:
         raise ValueError(f'Missing credential: {key.upper()} not set in .env')
     return value
 
@@ -116,8 +116,9 @@ class BaseCasino:
             notify(f'Balance record failed: {e}', 'WARNING')
 
     def _casino_key(self) -> str:
-        import re
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', self._name).lower()
+        # Use the module filename (e.g. casinos.stake_us → stake_us) so the key
+        # always matches the .py file regardless of class name capitalisation.
+        return self.__class__.__module__.split('.')[-1]
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
