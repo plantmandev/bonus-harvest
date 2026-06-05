@@ -54,8 +54,13 @@ class FortuneCoins(BaseCasino):
 
         self.driver.get(self.URL)
         self.click(self.LOGIN_BUTTON)
-        self.type_into(self.USERNAME, username)
-        pass_el = self.type_into(self.PASSWORD, password)
+        # Use JS click to avoid ElementClickInterceptedException from the login modal overlay
+        username_el = self.wait.until(EC.presence_of_element_located(self.USERNAME))
+        self.driver.execute_script('arguments[0].click()', username_el)
+        username_el.send_keys(username)
+        pass_el = self.wait.until(EC.presence_of_element_located(self.PASSWORD))
+        self.driver.execute_script('arguments[0].click()', pass_el)
+        pass_el.send_keys(password)
         pass_el.send_keys(Keys.ENTER)
         time.sleep(3)
         self.click(self.LOGIN_SUBMIT)

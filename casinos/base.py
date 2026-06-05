@@ -86,6 +86,9 @@ class BaseCasino:
             return True
 
     def run(self):
+        if getattr(self, 'DISABLED', False):
+            notify(f'{self._name} is disabled — skipping')
+            return
         if not self._is_due():
             notify(f'Not yet due — skipping')
             return
@@ -116,9 +119,10 @@ class BaseCasino:
             notify(f'Balance record failed: {e}', 'WARNING')
 
     def _casino_key(self) -> str:
-        # Use the module filename (e.g. casinos.stake_us → stake_us) so the key
-        # always matches the .py file regardless of class name capitalisation.
-        return self.__class__.__module__.split('.')[-1]
+        # Use the source file path so the key is always correct even when the
+        # module is run as __main__ (python3 -m casinos.stake_us).
+        import inspect
+        return Path(inspect.getfile(self.__class__)).stem
 
     # ── helpers ───────────────────────────────────────────────────────────────
 

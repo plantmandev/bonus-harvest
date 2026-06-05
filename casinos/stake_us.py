@@ -25,8 +25,8 @@ class StakeUS(BaseCasino):
     CLAIM_BONUS      = (By.XPATH, '//button[normalize-space()="Claim Daily Bonus"]')
     ALREADY_CLAIMED  = (By.XPATH, '//*[contains(text(),"Come back tomorrow")]')
     WALLET_ERROR     = (By.XPATH, '//*[contains(text(),"something") and contains(text(),"wrong")]')
-    # SC balance: value box sits directly above "Stake Cash" label in the Daily Bonus tab
-    SC_BALANCE       = (By.XPATH, '//*[normalize-space(text())="Stake Cash"]/preceding-sibling::*[1]')
+    # SC balance: "Stake Cash" label sits above the input — value is the next input after it
+    SC_BALANCE       = (By.XPATH, '//*[normalize-space(text())="Stake Cash"]/following::input[1]')
     # Countdown elements: number sits before its unit label
     TIMER_DAY        = (By.XPATH, '//*[normalize-space(text())="Day"]/preceding-sibling::*[1]')
     TIMER_HOUR       = (By.XPATH, '//*[normalize-space(text())="Hour"]/preceding-sibling::*[1]')

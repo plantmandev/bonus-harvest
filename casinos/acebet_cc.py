@@ -15,7 +15,7 @@ class AceBetCC(BaseCasino):
     URL = 'https://acebet.cc/'
 
     # Login
-    LOGIN_BTN  = (By.XPATH, '//button[contains(., "Log In") or contains(., "Login")]')
+    LOGIN_BTN  = (By.XPATH, '//button[contains(., "Sign In") or contains(., "Log In") or contains(., "Login")]')
     USERNAME   = (By.NAME,  'email')
     PASSWORD   = (By.NAME,  'password')
     # Anchor on the form containing the email field — avoids fragile radix IDs
