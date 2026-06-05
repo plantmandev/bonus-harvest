@@ -20,13 +20,14 @@ class StakeUS(BaseCasino):
     USERNAME         = (By.NAME, 'emailOrName')
     PASSWORD         = (By.NAME, 'password')
     EMAIL_CODE_INPUT = (By.CSS_SELECTOR, 'input[type="text"]')
-    WALLET           = (By.CSS_SELECTOR, '[data-testid="wallet"]')
+    WALLET           = (By.CSS_SELECTOR, '#navigation-container-header > div.w-full.flex.justify-center > div > button')
     DAILY_BONUS      = (By.CSS_SELECTOR, '[data-testid="dailyBonus"]')
     CLAIM_BONUS      = (By.XPATH, '//button[normalize-space()="Claim Daily Bonus"]')
     ALREADY_CLAIMED  = (By.XPATH, '//*[contains(text(),"Come back tomorrow")]')
     WALLET_ERROR     = (By.XPATH, '//*[contains(text(),"something") and contains(text(),"wrong")]')
-    # SC balance: "Stake Cash" label sits above the input — value is the next input after it
-    SC_BALANCE       = (By.XPATH, '//*[normalize-space(text())="Stake Cash"]/following::input[1]')
+    # SC balance: 3rd currency card in the wallet overview, value span inside .value-ctainer
+    SC_BALANCE       = (By.CSS_SELECTOR,
+        'div.flex.flex-col.gap-4 > div > div:nth-child(3) > div > div.value-ctainer > span > span')
     # Countdown elements: number sits before its unit label
     TIMER_DAY        = (By.XPATH, '//*[normalize-space(text())="Day"]/preceding-sibling::*[1]')
     TIMER_HOUR       = (By.XPATH, '//*[normalize-space(text())="Hour"]/preceding-sibling::*[1]')
@@ -96,9 +97,10 @@ class StakeUS(BaseCasino):
 
     def _read_sc_balance(self) -> str:
         try:
-            el = self.wait.until(EC.presence_of_element_located(self.SC_BALANCE))
-            value = (el.get_attribute('value') or el.text).strip()
-            return f'{value} SC'
+            # Re-open wallet to overview so SC balance span is visible
+            self.click(self.WALLET)
+            el = self.wait.until(EC.visibility_of_element_located(self.SC_BALANCE))
+            return f'{el.text.strip()} SC'
         except Exception:
             return 'unavailable'
 

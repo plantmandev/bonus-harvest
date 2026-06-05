@@ -28,6 +28,13 @@ CASINO_META = {
         'logo':     'https://www.fortunecoins.com/favicon.ico',
         'color':    '#c0392b',
     },
+    'acebet_cc': {
+        'display':  'AceBet.cc',
+        'rtp':      0.96,
+        'currency': 'SC',
+        'logo':     'https://acebet.cc/favicon.ico',
+        'color':    '#2980b9',
+    },
 }
 
 
