@@ -22,6 +22,8 @@ class FortuneCoins(BaseCasino):
     BONUS_POPUP_WAIT = 10
     BONUS_POPUP_SELECTORS = [
         (By.CSS_SELECTOR, '.transparent-close-popup-button'),
+        # "Daily bonus is ready" popup — uses .modal.show without .fade
+        (By.CSS_SELECTOR, '.modal.show > div > div > button'),
         (By.CSS_SELECTOR, '.modal.fade.show button.close'),
         (By.CSS_SELECTOR, '.modal.fade.show [data-dismiss="modal"]'),
         (By.XPATH,        '//div[contains(@class,"modal") and contains(@class,"show")]//button[contains(@class,"close")]'),
@@ -48,6 +50,9 @@ class FortuneCoins(BaseCasino):
     TOS_CONFIRM  = (By.CSS_SELECTOR, '.consent-page-update-dialog__btn')
     TOS_WAIT     = 10
 
+    # Set > 0 to pause after login so you can inspect popups in the browser
+    INSPECT_PAUSE = 60
+
     def login(self):
         username = read_credentials('fortune_username')
         password = read_credentials('fortune_password')
@@ -66,6 +71,9 @@ class FortuneCoins(BaseCasino):
         self.click(self.LOGIN_SUBMIT)
         self._accept_tos()
         self._dismiss_bonus_popup()
+        if self.INSPECT_PAUSE > 0:
+            notify(f'INSPECT_PAUSE: {self.INSPECT_PAUSE}s — first popup dismissed, check browser for next one')
+            time.sleep(self.INSPECT_PAUSE)
         notify('Login successful', 'SUCCESS')
 
     def _accept_tos(self):
@@ -83,13 +91,36 @@ class FortuneCoins(BaseCasino):
 
     def _dismiss_bonus_popup(self):
         w = WebDriverWait(self.driver, self.BONUS_POPUP_WAIT)
+
+        # Try each known close-button selector first
         for locator in self.BONUS_POPUP_SELECTORS:
             try:
                 btn = w.until(EC.element_to_be_clickable(locator))
                 self.driver.execute_script('arguments[0].click()', btn)
+                notify('Bonus popup dismissed via selector')
                 return
             except TimeoutException:
                 pass
+
+        # Fallback 1: press Escape
+        from selenium.webdriver.common.keys import Keys as _Keys
+        try:
+            self.driver.find_element(By.TAG_NAME, 'body').send_keys(_Keys.ESCAPE)
+            time.sleep(1)
+            if not self.driver.find_elements(By.CSS_SELECTOR, '.modal.fade.show'):
+                notify('Bonus popup dismissed via Escape')
+                return
+        except Exception:
+            pass
+
+        # Fallback 2: JS force-hide all visible modals
+        try:
+            self.driver.execute_script(
+                "document.querySelectorAll('.modal.fade.show').forEach(m => m.style.display='none')"
+            )
+            notify('Bonus popup force-hidden via JS')
+        except Exception:
+            pass
 
     def farm(self) -> timedelta:
         self.screenshot('farm_start')
