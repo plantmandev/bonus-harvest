@@ -1,3 +1,4 @@
+import json
 import os
 import smtplib
 from datetime import datetime, timedelta
@@ -12,7 +13,8 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 
 from .tracker import weekly_summary
 
-TEMPLATE_PATH = Path(__file__).parent.parent / 'templates' / 'weekly_email.html'
+TEMPLATE_PATH  = Path(__file__).parent.parent / 'templates' / 'daily_email.html'
+FAILURES_FILE  = Path(__file__).parent.parent / 'logs' / 'last_failures.json'
 
 CARD_TEMPLATE = Template('''
           <tr>
@@ -57,10 +59,42 @@ CARD_TEMPLATE = Template('''
           </tr>
 ''')
 
+FAILURE_BANNER = Template('''
+          <tr>
+            <td style="padding:16px 32px 8px;">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="border:1px solid #e74c3c;border-radius:6px;background:#fff5f5;overflow:hidden;">
+                <tr>
+                  <td style="background:#e74c3c;width:6px;"></td>
+                  <td style="padding:14px 16px;">
+                    <p style="margin:0;font-size:14px;font-weight:bold;color:#c0392b;">
+                      ⚠️ Manual Fix Required
+                    </p>
+                    <p style="margin:6px 0 0;font-size:13px;color:#555;">
+                      The following casinos failed after $max_retries attempts and need attention:
+                    </p>
+                    <p style="margin:6px 0 0;font-size:13px;font-weight:bold;color:#c0392b;">
+                      $failed_list
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+''')
+
+
+def _read_failures() -> list[str]:
+    try:
+        data = json.loads(FAILURES_FILE.read_text())
+        return data.get('failed', [])
+    except Exception:
+        return []
+
 
 def _format_date(iso: str | None) -> str:
     if not iso:
-        return 'no data this week'
+        return 'no recent data'
     try:
         return datetime.fromisoformat(iso).strftime('%b %d, %Y %H:%M')
     except ValueError:
@@ -72,7 +106,7 @@ def _render_card(entry: dict) -> str:
         balance_display  = 'No data'
         estimated_payout = '—'
     else:
-        balance_display  = f"{entry['balance']:.2f} {entry['currency']}"
+        balance_display  = f"{entry['balance']:,.2f} {entry['currency']}"
         estimated_payout = f"{entry['estimated_payout']:.2f}"
 
     return CARD_TEMPLATE.substitute(
@@ -86,13 +120,22 @@ def _render_card(entry: dict) -> str:
     )
 
 
-def render_html(user_name: str = 'there', as_of: datetime | None = None) -> str:
+def render_html(user_name: str = 'there', as_of: datetime | None = None,
+                failed_casinos: list[str] | None = None) -> str:
     as_of   = as_of or datetime.now()
     entries = weekly_summary(as_of)
 
-    week_start = (as_of - timedelta(days=7)).strftime('%b %d')
-    week_end   = as_of.strftime('%b %d, %Y')
-    week_range = f'{week_start} – {week_end}'
+    if failed_casinos is None:
+        failed_casinos = _read_failures()
+
+    failures_section = ''
+    if failed_casinos:
+        from .tracker import CASINO_META
+        display_names = [CASINO_META.get(k, {}).get('display', k) for k in failed_casinos]
+        failures_section = FAILURE_BANNER.substitute(
+            max_retries = 3,
+            failed_list = ', '.join(display_names),
+        )
 
     cards = '\n'.join(_render_card(e) for e in entries)
 
@@ -102,14 +145,16 @@ def render_html(user_name: str = 'there', as_of: datetime | None = None) -> str:
 
     raw = TEMPLATE_PATH.read_text()
     return Template(raw).safe_substitute(
-        USER_NAME     = user_name,
-        WEEK_RANGE    = week_range,
-        CASINO_CARDS  = cards,
-        TOTAL_PAYOUT  = f'{total:.2f}',
+        USER_NAME        = user_name,
+        DATE             = as_of.strftime('%b %d, %Y'),
+        CASINO_CARDS     = cards,
+        TOTAL_PAYOUT     = f'{total:.2f}',
+        FAILURES_SECTION = failures_section,
     )
 
 
-def send_report(to: str | None = None, user_name: str = 'there'):
+def send_report(to: str | None = None, user_name: str = 'there',
+                failed_casinos: list[str] | None = None):
     sender       = os.getenv('GMAIL_ADDRESS', 'sirplantman@gmail.com')
     app_password = os.getenv('GMAIL_APP_PASSWORD')
     recipient    = to or os.getenv('REPORT_RECIPIENT', sender)
@@ -117,8 +162,11 @@ def send_report(to: str | None = None, user_name: str = 'there'):
     if not app_password:
         raise ValueError('GMAIL_APP_PASSWORD not set in .env')
 
-    html    = render_html(user_name)
-    subject = f'🌾 Bonus Harvest — Weekly Report ({datetime.now().strftime("%b %d, %Y")})'
+    failed_casinos = failed_casinos if failed_casinos is not None else _read_failures()
+    html    = render_html(user_name, failed_casinos=failed_casinos)
+    subject = f'🌾 Bonus Harvest — Daily Report ({datetime.now().strftime("%b %d, %Y")})'
+    if failed_casinos:
+        subject = f'⚠️ {subject} — Action Required'
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
@@ -131,7 +179,7 @@ def send_report(to: str | None = None, user_name: str = 'there'):
         s.login(sender, app_password)
         s.send_message(msg)
 
-    print(f'Weekly report sent to {recipient}')
+    print(f'Daily report sent to {recipient}')
 
 
 if __name__ == '__main__':
