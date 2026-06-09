@@ -99,8 +99,17 @@ class BaseCasino:
             self.glean()
             self.harvest()
             self._write_next_run(delta)
+            self._write_status('OK')
+        except Exception:
+            self._write_status('FAILED')
+            raise
         finally:
             self.driver.quit()
+
+    def _write_status(self, status: str):
+        key  = self._casino_key()
+        path = Path(__file__).parent.parent / 'logs' / f'{key}_status.txt'
+        path.write_text(f'{status} {datetime.now().strftime("%Y-%m-%d %H:%M")}')
 
     def _write_next_run(self, delta: timedelta | None):
         if delta is None:

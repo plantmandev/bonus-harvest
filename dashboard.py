@@ -33,13 +33,6 @@ CASINOS = [
     {'key': 'chumba_casino', 'display': 'Chumba Casino', 'color': 'white', 'disabled': True},
 ]
 
-KEY_TO_CLASS = {
-    'stake_us':      'StakeUS',
-    'fortune_coins': 'FortuneCoins',
-    'acebet_cc':     'AceBetCC',
-    'chumba_casino': 'ChumbaCasino',
-}
-
 
 # ── data helpers ──────────────────────────────────────────────────────────────
 
@@ -49,7 +42,7 @@ def _read_db(casino_key: str):
         conn = sqlite3.connect(f'file:{DB_PATH}?mode=ro', uri=True)
         row  = conn.execute(
             'SELECT balance, currency, recorded_at FROM balances '
-            'WHERE casino = ? ORDER BY recorded_at DESC LIMIT 1',
+            'WHERE casino = ? AND balance IS NOT NULL ORDER BY recorded_at DESC LIMIT 1',
             (casino_key,),
         ).fetchone()
         conn.close()
@@ -80,54 +73,19 @@ def _next_run_info(casino_key: str):
 
 
 def _last_harvest_status(casino_key: str):
-    """Return (timestamp_str, status_markup) from the most recent relevant log."""
-    class_name = KEY_TO_CLASS.get(casino_key, casino_key)
-
-    # Per-casino logs written by run_casino.sh: {key}_YYYY-MM-DD_HHMM.log
-    per_logs = sorted(LOG_DIR.glob(f'{casino_key}_????-??-??_????.log'))
-    if per_logs:
-        log_path = per_logs[-1]
+    """Return (timestamp_str, status_markup) from the status file written by BaseCasino.run()."""
+    status_file = LOG_DIR / f'{casino_key}_status.txt'
+    if status_file.exists():
         try:
-            date_time = '_'.join(log_path.stem.split('_')[-2:])  # YYYY-MM-DD_HHMM
-            dt = datetime.strptime(date_time, '%Y-%m-%d_%H%M')
-            ts = dt.strftime('%m-%d %H:%M')
+            parts  = status_file.read_text().strip().split(' ', 1)
+            status = parts[0]
+            ts     = parts[1] if len(parts) > 1 else '—'
+            if status == 'OK':
+                return ts, '[green]OK[/green]'
+            if status == 'FAILED':
+                return ts, '[red]FAILED[/red]'
         except Exception:
-            ts = log_path.stem
-        content = log_path.read_text()
-        if '[ERROR]' in content or 'failed' in content.lower():
-            return ts, '[red]FAILED[/red]'
-        if '[SUCCESS]' in content:
-            return ts, '[green]OK[/green]'
-        return ts, '[yellow]?[/yellow]'
-
-    # All-casino harvest logs: harvest_YYYY-MM-DD.log
-    for log_path in reversed(sorted(LOG_DIR.glob('harvest_????-??-??.log'))):
-        content = log_path.read_text()
-        if class_name not in content and casino_key not in content:
-            continue
-        try:
-            dt = datetime.strptime(log_path.stem.split('_', 1)[1], '%Y-%m-%d')
-            ts = dt.strftime('%m-%d')
-        except Exception:
-            ts = '—'
-        # Look for class-specific outcome lines for precise timestamp
-        for line in reversed(content.splitlines()):
-            if f'{class_name} completed' in line or f'{class_name} harvest' in line.lower():
-                try:
-                    ts = line[:16]
-                except Exception:
-                    pass
-                break
-        # Check the specific "Failed: key1, key2" line rather than anywhere in file
-        casino_failed = any(
-            'Failed:' in line and casino_key in line
-            for line in content.splitlines()
-        )
-        if casino_failed:
-            return ts, '[red]FAILED[/red]'
-        if f'{class_name} completed' in content:
-            return ts, '[green]OK[/green]'
-        return ts, '[yellow]?[/yellow]'
+            pass
 
     return '—', '[dim]—[/dim]'
 

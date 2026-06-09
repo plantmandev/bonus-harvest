@@ -18,38 +18,20 @@ FAILURES_FILE  = Path(__file__).parent.parent / 'logs' / 'last_failures.json'
 
 CARD_TEMPLATE = Template('''
           <tr>
-            <td style="padding:16px 32px 8px;">
+            <td style="padding:10px 24px 0;">
               <table width="100%" cellpadding="0" cellspacing="0"
-                     style="border:1px solid #eeeeee;border-radius:6px;overflow:hidden;">
+                     style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;">
                 <tr>
-                  <td style="background:$color;width:6px;"></td>
-                  <td style="padding:14px 16px;">
+                  <td style="background:$color;width:4px;"></td>
+                  <td style="padding:12px 14px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td>
-                          <img src="$logo" width="24" height="24"
-                               style="vertical-align:middle;border-radius:4px;margin-right:8px;"
-                               alt="$display logo">
-                          <span style="font-size:15px;font-weight:bold;color:#1a1a2e;vertical-align:middle;">
-                            $display
-                          </span>
-                          <span style="font-size:11px;color:#999;margin-left:8px;">
-                            RTP $rtp_pct%
-                          </span>
-                        </td>
-                        <td align="right">
-                          <span style="font-size:18px;font-weight:bold;color:#333;">
-                            $balance_display
-                          </span>
-                        </td>
+                        <td style="font-size:14px;font-weight:bold;color:#1a1a2e;">$display</td>
+                        <td align="right" style="font-size:16px;font-weight:bold;color:#333;">$balance_display</td>
                       </tr>
                       <tr>
-                        <td style="font-size:12px;color:#888;padding-top:4px;">
-                          Balance as of $recorded_at
-                        </td>
-                        <td align="right" style="font-size:12px;color:#1a9e5c;padding-top:4px;">
-                          ≈ $$$estimated_payout est. payout
-                        </td>
+                        <td style="font-size:11px;color:#aaa;padding-top:2px;">$recorded_at</td>
+                        <td align="right" style="font-size:11px;color:#1a9e5c;padding-top:2px;">≈ $$$estimated_payout</td>
                       </tr>
                     </table>
                   </td>
@@ -145,7 +127,6 @@ def render_html(user_name: str = 'there', as_of: datetime | None = None,
 
     raw = TEMPLATE_PATH.read_text()
     return Template(raw).safe_substitute(
-        USER_NAME        = user_name,
         DATE             = as_of.strftime('%b %d, %Y'),
         CASINO_CARDS     = cards,
         TOTAL_PAYOUT     = f'{total:.2f}',

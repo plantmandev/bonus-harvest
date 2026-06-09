@@ -20,6 +20,7 @@ CASINO_META = {
         'currency': 'SC',
         'logo':     'https://lobby.chumbacasino.com/favicon.ico',
         'color':    '#e8b923',
+        'disabled': True,
     },
     'fortune_coins': {
         'display':  'Fortune Coins',
@@ -78,7 +79,7 @@ def weekly_summary(as_of: datetime | None = None) -> list[dict]:
         rows = conn.execute(
             '''SELECT casino, balance, currency, raw_text, recorded_at
                FROM balances
-               WHERE recorded_at >= ?
+               WHERE recorded_at >= ? AND balance IS NOT NULL
                ORDER BY casino, recorded_at DESC''',
             (since,)
         ).fetchall()
@@ -87,6 +88,10 @@ def weekly_summary(as_of: datetime | None = None) -> list[dict]:
     entries = []
     for casino, balance, currency, raw_text, recorded_at in rows:
         if casino in seen:
+            continue
+        if casino not in CASINO_META:
+            continue  # skip ghost keys like __main__
+        if CASINO_META[casino].get('disabled'):
             continue
         seen.add(casino)
         meta = CASINO_META.get(casino, {})
@@ -104,8 +109,10 @@ def weekly_summary(as_of: datetime | None = None) -> list[dict]:
             'recorded_at':      recorded_at,
         })
 
-    # Include casinos with no recent data so the report is always complete
+    # Include active casinos with no recent data so the report is always complete
     for key, meta in CASINO_META.items():
+        if meta.get('disabled'):
+            continue
         if key not in seen:
             entries.append({
                 'casino':           key,

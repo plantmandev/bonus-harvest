@@ -60,11 +60,6 @@ class StakeUS(BaseCasino):
     def farm(self) -> timedelta:
         self.screenshot('farm_start')
 
-        if self.driver.find_elements(*self.ALREADY_CLAIMED):
-            notify('Daily bonus already claimed — nothing to do')
-            self.screenshot('already_claimed')
-            return timedelta(hours=24)
-
         notify('Clicking wallet...')
         self._open_wallet_with_retry()
         self.screenshot('after_wallet')
@@ -72,6 +67,12 @@ class StakeUS(BaseCasino):
         notify('Clicking daily bonus...')
         self.click(self.DAILY_BONUS)
         self.screenshot('after_daily_bonus')
+
+        # Check already-claimed inside the wallet where the state is actually visible
+        if self.driver.find_elements(*self.ALREADY_CLAIMED):
+            notify('Daily bonus already claimed — nothing to do')
+            self.screenshot('already_claimed')
+            return self._read_next_claim_delta()
 
         notify('Clicking claim button...')
         self.click(self.CLAIM_BONUS)
@@ -97,7 +98,10 @@ class StakeUS(BaseCasino):
 
     def _read_sc_balance(self) -> str:
         try:
-            # Re-open wallet to overview so SC balance span is visible
+            from selenium.webdriver.common.keys import Keys as _Keys
+            # Close any open wallet/overlay before reopening to avoid toggle-close
+            self.driver.find_element(By.TAG_NAME, 'body').send_keys(_Keys.ESCAPE)
+            time.sleep(1)
             self.click(self.WALLET)
             el = self.wait.until(EC.visibility_of_element_located(self.SC_BALANCE))
             return f'{el.text.strip()} SC'

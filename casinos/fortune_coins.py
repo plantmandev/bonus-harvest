@@ -19,39 +19,32 @@ class FortuneCoins(BaseCasino):
     USERNAME        = (By.CSS_SELECTOR, '#emailAddress')
     PASSWORD        = (By.CSS_SELECTOR, '#password')
 
-    BONUS_POPUP_WAIT = 10
+    BONUS_POPUP_WAIT = 10  # seconds to wait for first popup
     BONUS_POPUP_SELECTORS = [
         (By.CSS_SELECTOR, '.transparent-close-popup-button'),
-        # "Daily bonus is ready" popup — uses .modal.show without .fade
+        # "Daily bonus is ready" popup — .modal.show without .fade
         (By.CSS_SELECTOR, '.modal.show > div > div > button'),
+        # "Connect with Google / Facebook" popups — button sibling of .modal-body
+        (By.CSS_SELECTOR, 'div.modal-body ~ button'),
+        (By.XPATH,        '//div[contains(@class,"modal-body")]/following-sibling::button'),
         (By.CSS_SELECTOR, '.modal.fade.show button.close'),
         (By.CSS_SELECTOR, '.modal.fade.show [data-dismiss="modal"]'),
         (By.XPATH,        '//div[contains(@class,"modal") and contains(@class,"show")]//button[contains(@class,"close")]'),
     ]
 
-    # TODO: verify selectors against live site
-    COIN_STORE_BTN = (By.CSS_SELECTOR, '.coin-store-button button')
-    READY_BONUS    = (By.XPATH, '/html/body/div[3]/div/div[1]/div/div/div[2]/div/button')
-    COLLECT_BONUS  = (By.CSS_SELECTOR, (
-        'body > div:nth-child(22) > div > div.modal.fade.show > div > div > '
-        'div.modal-body > div:nth-child(1) > div.coinsRow > div:nth-child(1) > '
-        'div > div.daily-bonus-buttons-wrapper'
-    ))
-    CLOSE_BONUS    = (By.CSS_SELECTOR, (
-        'body > div:nth-child(22) > div > div.modal.fade.show > div > div > button'
-    ))
-    FC_BALANCE     = (By.CSS_SELECTOR, (
-        '#__next > div.headerAuth > div.headerContainer > nav > '
-        'div.headerAuthCenter > div > div > div.FCDropDown > div > div:nth-child(3) > h3'
-    ))
+    COIN_STORE_BTN  = (By.CSS_SELECTOR, '.coin-store-button button')
+    FREE_COINS_TAB  = (By.CSS_SELECTOR, 'div.coin-store-tabs > button:nth-child(2)')
+    COLLECT_BONUS   = (By.CSS_SELECTOR, 'button.daily-bonus-collect-button')
+    # Balance: click the FC coin button to expand it, then read the decimal value
+    FC_BALANCE_BTN  = (By.CSS_SELECTOR, 'div.FCButtonItem.FCoins > button')
+    FC_BALANCE_VAL  = (By.CSS_SELECTOR, 'div.FCButtonItem.active.FCoins > button > div.textDecimals.desktop')
+    # TODO: add next-bonus countdown selector once confirmed
+    BONUS_TIMER     = None
 
     TOS_SCROLL   = (By.CSS_SELECTOR, '.consent-page-update-dialog__body-scroll')
     TOS_CHECKBOX = (By.ID,           'terms-conditions-updated-dialog-checkbox')
     TOS_CONFIRM  = (By.CSS_SELECTOR, '.consent-page-update-dialog__btn')
     TOS_WAIT     = 10
-
-    # Set > 0 to pause after login so you can inspect popups in the browser
-    INSPECT_PAUSE = 60
 
     def login(self):
         username = read_credentials('fortune_username')
@@ -71,9 +64,6 @@ class FortuneCoins(BaseCasino):
         self.click(self.LOGIN_SUBMIT)
         self._accept_tos()
         self._dismiss_bonus_popup()
-        if self.INSPECT_PAUSE > 0:
-            notify(f'INSPECT_PAUSE: {self.INSPECT_PAUSE}s — first popup dismissed, check browser for next one')
-            time.sleep(self.INSPECT_PAUSE)
         notify('Login successful', 'SUCCESS')
 
     def _accept_tos(self):
@@ -89,36 +79,49 @@ class FortuneCoins(BaseCasino):
         except TimeoutException:
             pass
 
-    def _dismiss_bonus_popup(self):
-        w = WebDriverWait(self.driver, self.BONUS_POPUP_WAIT)
+    _MODAL_PRESENT = (By.CSS_SELECTOR, '.modal.show, .modal.fade.show, div.modal-body')
 
-        # Try each known close-button selector first
-        for locator in self.BONUS_POPUP_SELECTORS:
-            try:
-                btn = w.until(EC.element_to_be_clickable(locator))
-                self.driver.execute_script('arguments[0].click()', btn)
-                notify('Bonus popup dismissed via selector')
+    def _dismiss_bonus_popup(self, max_rounds: int = 5):
+        """Dismiss all stacked post-login popups, one per round."""
+        for round_num in range(max_rounds):
+            # After the first round, do a free instant check before burning timeout per selector
+            if round_num > 0:
+                time.sleep(0.8)  # let close animation settle
+                if not self.driver.find_elements(*self._MODAL_PRESENT):
+                    notify(f'All popups cleared after {round_num} round(s)')
+                    return
+
+            w = WebDriverWait(self.driver, self.BONUS_POPUP_WAIT if round_num == 0 else 5)
+            dismissed = False
+
+            for locator in self.BONUS_POPUP_SELECTORS:
+                try:
+                    btn = w.until(EC.element_to_be_clickable(locator))
+                    self.driver.execute_script('arguments[0].click()', btn)
+                    notify(f'Popup dismissed (round {round_num + 1})')
+                    dismissed = True
+                    break
+                except TimeoutException:
+                    pass
+
+            if not dismissed:
+                # Fallback: Escape key
+                try:
+                    self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                    time.sleep(0.5)
+                except Exception:
+                    pass
+                if round_num > 0:
+                    notify(f'All popups cleared after {round_num} round(s)')
                 return
-            except TimeoutException:
-                pass
 
-        # Fallback 1: press Escape
-        from selenium.webdriver.common.keys import Keys as _Keys
-        try:
-            self.driver.find_element(By.TAG_NAME, 'body').send_keys(_Keys.ESCAPE)
-            time.sleep(1)
-            if not self.driver.find_elements(By.CSS_SELECTOR, '.modal.fade.show'):
-                notify('Bonus popup dismissed via Escape')
-                return
-        except Exception:
-            pass
-
-        # Fallback 2: JS force-hide all visible modals
+        # Last-resort JS force-hide if we exhausted rounds
         try:
             self.driver.execute_script(
-                "document.querySelectorAll('.modal.fade.show').forEach(m => m.style.display='none')"
+                "document.querySelectorAll('.modal.show,.modal.fade.show')"
+                ".forEach(m => m.style.display='none')"
             )
-            notify('Bonus popup force-hidden via JS')
+            notify('Remaining popups force-hidden via JS', 'WARNING')
         except Exception:
             pass
 
@@ -129,24 +132,36 @@ class FortuneCoins(BaseCasino):
         self.click(self.COIN_STORE_BTN)
         self.screenshot('after_coin_store')
 
-        notify('Clicking ready bonus...')
-        self.click(self.READY_BONUS)
-        self.screenshot('after_ready_bonus')
+        notify('Clicking free coins tab...')
+        self.click(self.FREE_COINS_TAB)
+        self.screenshot('after_free_coins_tab')
 
-        notify('Collecting bonus...')
+        notify('Collecting daily bonus...')
         self.click(self.COLLECT_BONUS)
         self.screenshot('after_collect')
 
-        self.click(self.CLOSE_BONUS)
-        balance_el = self.wait.until(lambda d: d.find_element(*self.FC_BALANCE))
-        balance = balance_el.text.strip()
+        # Close coin store popup before reading nav balance
+        self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+        time.sleep(1)
+        balance = self._read_fc_balance()
         self.record_balance(balance)
         notify(f'Daily bonus claimed — balance: {balance}', 'SUCCESS')
-        return timedelta(hours=24)
+        return timedelta(hours=24, minutes=1)
+
+    def _read_fc_balance(self) -> str:
+        try:
+            notify('Reading FC balance...')
+            self.click(self.FC_BALANCE_BTN)
+            el = self.wait.until(EC.visibility_of_element_located(self.FC_BALANCE_VAL))
+            raw   = el.text.strip().replace(',', '')
+            value = float(raw) / 100
+            return f'{value:.2f} FC'
+        except Exception:
+            return 'unavailable'
 
 
 if __name__ == '__main__':
-    notify('=== Fortune Coins harvest starting ===')
+    notify('=== Fortune Wins harvest starting ===')
     try:
         FortuneCoins().run()
         notify('=== Harvest complete ===', 'SUCCESS')
