@@ -69,6 +69,14 @@ def main():
     FAILURES_FILE.write_text(json.dumps({'failed': failed, 'timestamp': __import__('datetime').datetime.now().isoformat()}))
 
     notify(f'Done — {len(passed)} passed, {len(failed)} failed')
+
+    try:
+        from data_analysis.plot import generate_chart
+        chart_path = generate_chart()
+        notify(f'Balance chart updated: {chart_path}')
+    except Exception as e:
+        notify(f'Chart generation skipped: {e}', 'WARNING')
+
     if failed:
         notify(f'Failed: {", ".join(failed)}', 'ERROR')
         sys.exit(1)

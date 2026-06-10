@@ -14,7 +14,21 @@ import undetected_chromedriver as UC
 load_dotenv(Path(__file__).parent.parent / '.env')
 
 WAIT_TIMEOUT   = 30
-SCREENSHOT_DIR = Path(__file__).parent.parent / 'logs' / 'screenshots'
+LOG_DIR        = Path(__file__).parent.parent / 'logs'
+SCREENSHOT_DIR = LOG_DIR / 'screenshots'
+
+
+def _log_to_file(line: str) -> None:
+    """Write to the daily log file when stdout is not already being redirected by a shell script."""
+    if not sys.stdout.isatty():
+        return  # shell already capturing stdout+stderr to a file
+    try:
+        log_path = LOG_DIR / f'harvest_{datetime.now().strftime("%Y-%m-%d")}.log'
+        LOG_DIR.mkdir(exist_ok=True)
+        with log_path.open('a', encoding='utf-8') as f:
+            f.write(line + '\n')
+    except Exception:
+        pass  # never let logging failures break the harvest
 
 
 def notify(message: str, level: str = 'INFO'):
@@ -24,6 +38,7 @@ def notify(message: str, level: str = 'INFO'):
     print(line, flush=True)
     if level == 'ERROR':
         print(line, file=sys.stderr, flush=True)
+    _log_to_file(line)
 
 
 def read_credentials(key: str) -> str:
@@ -92,6 +107,7 @@ class BaseCasino:
         if not self._is_due():
             notify(f'Not yet due — skipping')
             return
+        started_at = datetime.now().isoformat()
         self._start_driver()
         try:
             self.login()
@@ -100,15 +116,35 @@ class BaseCasino:
             self.harvest()
             self._write_next_run(delta)
             self._write_status('OK')
-        except Exception:
-            self._write_status('FAILED')
+            self._record_event(started_at, 'OK', None)
+        except Exception as exc:
+            self._write_status('FAILED', exc)
+            self._record_event(started_at, 'FAILED', exc)
             raise
         finally:
             self.driver.quit()
 
-    def _write_status(self, status: str):
-        key  = self._casino_key()
-        path = Path(__file__).parent.parent / 'logs' / f'{key}_status.txt'
+    def _record_event(self, started_at: str, status: str, exc: Exception | None) -> None:
+        try:
+            from data_analysis.tracker import record_event
+            from casinos.errors import HarvestError
+            if exc is not None:
+                code        = exc.code if isinstance(exc, HarvestError) else 'Unknown'
+                full_status = f'FAILED:{code}'
+                error_msg   = str(exc)
+            else:
+                full_status = 'OK'
+                error_msg   = None
+            record_event(self._casino_key(), started_at, full_status, error_msg)
+        except Exception as e:
+            notify(f'Event record failed: {e}', 'WARNING')
+
+    def _write_status(self, status: str, exc: Exception | None = None):
+        from casinos.errors import HarvestError
+        if status == 'FAILED':
+            code = exc.code if isinstance(exc, HarvestError) else 'Unknown'
+            status = f'FAILED:{code}'
+        path = Path(__file__).parent.parent / 'logs' / f'{self._casino_key()}_status.txt'
         path.write_text(f'{status} {datetime.now().strftime("%Y-%m-%d %H:%M")}')
 
     def _write_next_run(self, delta: timedelta | None):

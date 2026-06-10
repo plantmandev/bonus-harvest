@@ -28,7 +28,7 @@ REFRESH_SECONDS = 30
 
 CASINOS = [
     {'key': 'stake_us',      'display': 'Stake.us',      'color': 'green'},
-    {'key': 'fortune_coins', 'display': 'Fortune Coins', 'color': 'yellow'},
+    {'key': 'fortune_wins',  'display': 'Fortune Wins',  'color': 'yellow'},
     {'key': 'acebet_cc',     'display': 'AceBet.cc',     'color': 'cyan'},
     {'key': 'chumba_casino', 'display': 'Chumba Casino', 'color': 'white', 'disabled': True},
 ]
@@ -72,22 +72,47 @@ def _next_run_info(casino_key: str):
         return None, '[dim]—[/dim]'
 
 
+_ERROR_LABELS = {
+    'GmailAuthExpired':    '[red]Gmail OAuth expired[/red]',
+    'AccountVerification': '[yellow]Account verification needed[/yellow]',
+    'Unknown':             '[red]FAILED[/red]',
+}
+
+
 def _last_harvest_status(casino_key: str):
     """Return (timestamp_str, status_markup) from the status file written by BaseCasino.run()."""
     status_file = LOG_DIR / f'{casino_key}_status.txt'
-    if status_file.exists():
-        try:
-            parts  = status_file.read_text().strip().split(' ', 1)
-            status = parts[0]
-            ts     = parts[1] if len(parts) > 1 else '—'
-            if status == 'OK':
-                return ts, '[green]OK[/green]'
-            if status == 'FAILED':
-                return ts, '[red]FAILED[/red]'
-        except Exception:
-            pass
+    if not status_file.exists():
+        return '—', '[dim]—[/dim]'
+    try:
+        parts  = status_file.read_text().strip().split(' ', 1)
+        code   = parts[0]   # 'OK', 'FAILED:GmailAuthExpired', etc.
+        ts     = parts[1] if len(parts) > 1 else '—'
+        if code == 'OK':
+            return ts, '[green]OK[/green]'
+        if code.startswith('FAILED:'):
+            error_type = code.split(':', 1)[1]
+            markup = _ERROR_LABELS.get(error_type, f'[red]FAILED ({error_type})[/red]')
+            return ts, markup
+        return ts, '[red]FAILED[/red]'
+    except Exception:
+        return '—', '[dim]—[/dim]'
 
-    return '—', '[dim]—[/dim]'
+
+def _gmail_status() -> tuple[str, str]:
+    """Return (timestamp_str, status_markup)."""
+    path = LOG_DIR / 'gmail_auth_status.txt'
+    if not path.exists():
+        return '—', '[yellow]UNKNOWN[/yellow]'
+    try:
+        parts  = path.read_text().strip().split(' ', 1)
+        status = parts[0]
+        ts     = parts[1] if len(parts) > 1 else '—'
+        if status == 'OK':
+            return ts, '[green]OK[/green]'
+        return ts, '[bold red]EXPIRED — run: python3 auth/gmail.py[/bold red]'
+    except Exception:
+        return '—', '[yellow]?[/yellow]'
 
 
 def _at_queue():
@@ -152,6 +177,16 @@ def build_layout() -> Layout:
             last_ts,
             Text.from_markup(status_markup),
         )
+
+    # Gmail auth row
+    gmail_ts, gmail_markup = _gmail_status()
+    tbl.add_section()
+    tbl.add_row(
+        Text('Gmail OAuth', style='bold magenta'),
+        '[dim]—[/dim]', '[dim]—[/dim]', '[dim]—[/dim]', '[dim]—[/dim]',
+        gmail_ts,
+        Text.from_markup(gmail_markup),
+    )
 
     # at queue
     at_lines = _at_queue()

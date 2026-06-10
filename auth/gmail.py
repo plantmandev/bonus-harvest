@@ -2,6 +2,7 @@ import base64
 import os
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,8 +13,17 @@ from googleapiclient.discovery import build
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
-TOKEN_PATH = Path(__file__).parent / 'token.json'
+SCOPES            = ['https://www.googleapis.com/auth/gmail.modify']
+TOKEN_PATH        = Path(__file__).parent / 'token.json'
+GMAIL_STATUS_PATH = Path(__file__).parent.parent / 'logs' / 'gmail_auth_status.txt'
+
+
+from casinos.errors import GmailAuthExpiredError  # noqa: re-exported for callers
+
+
+def _write_status(status: str):
+    GMAIL_STATUS_PATH.parent.mkdir(exist_ok=True)
+    GMAIL_STATUS_PATH.write_text(f'{status} {datetime.now().strftime("%Y-%m-%d %H:%M")}')
 
 
 def _build_client_config():
@@ -33,16 +43,38 @@ def _build_client_config():
 
 
 def _get_service():
+    """Return an authorized Gmail service. Raises GmailAuthExpiredError if re-auth is needed."""
+    from google.auth.exceptions import RefreshError
     creds = None
     if TOKEN_PATH.exists():
         creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except RefreshError:
+                TOKEN_PATH.unlink(missing_ok=True)
+                _write_status('EXPIRED')
+                raise GmailAuthExpiredError(
+                    'Gmail OAuth token expired or revoked — run: python3 auth/gmail.py'
+                )
         else:
-            flow = InstalledAppFlow.from_client_config(_build_client_config(), SCOPES)
-            creds = flow.run_local_server(port=8080, open_browser=False)
+            _write_status('EXPIRED')
+            raise GmailAuthExpiredError(
+                'Gmail OAuth token missing — run: python3 auth/gmail.py'
+            )
         TOKEN_PATH.write_text(creds.to_json())
+    _write_status('OK')
+    return build('gmail', 'v1', credentials=creds)
+
+
+def reauthenticate():
+    """Run the full interactive OAuth flow and save a fresh token."""
+    flow  = InstalledAppFlow.from_client_config(_build_client_config(), SCOPES)
+    creds = flow.run_local_server(port=8080, open_browser=False)
+    TOKEN_PATH.write_text(creds.to_json())
+    _write_status('OK')
+    print('Gmail authentication successful — token saved.')
     return build('gmail', 'v1', credentials=creds)
 
 
@@ -91,5 +123,9 @@ def _decode_body(payload):
 
 
 if __name__ == '__main__':
-    _get_service()
-    print('token.json saved — Gmail authorized.')
+    try:
+        _get_service()
+        print('Gmail token is valid.')
+    except GmailAuthExpiredError as e:
+        print(f'{e}\nStarting re-authentication...')
+        reauthenticate()

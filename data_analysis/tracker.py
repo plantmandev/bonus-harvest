@@ -22,11 +22,11 @@ CASINO_META = {
         'color':    '#e8b923',
         'disabled': True,
     },
-    'fortune_coins': {
-        'display':  'Fortune Coins',
+    'fortune_wins': {
+        'display':  'Fortune Wins',
         'rtp':      0.9533,
         'currency': 'FC',
-        'logo':     'https://www.fortunecoins.com/favicon.ico',
+        'logo':     'https://www.fortunewins.com/favicon.ico',
         'color':    '#c0392b',
     },
     'acebet_cc': {
@@ -51,8 +51,28 @@ def _connect():
             currency    TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS harvest_events (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at TEXT    NOT NULL,
+            ended_at   TEXT    NOT NULL,
+            casino     TEXT    NOT NULL,
+            status     TEXT    NOT NULL,
+            error_msg  TEXT
+        )
+    ''')
     conn.commit()
     return conn
+
+
+def record_event(casino: str, started_at: str, status: str, error_msg: str | None = None) -> None:
+    """Record a harvest attempt (success or failure) to the audit table."""
+    with _connect() as conn:
+        conn.execute(
+            'INSERT INTO harvest_events (started_at, ended_at, casino, status, error_msg) '
+            'VALUES (?, ?, ?, ?, ?)',
+            (started_at, datetime.now().isoformat(), casino, status, error_msg),
+        )
 
 
 def parse_balance(text: str) -> float | None:

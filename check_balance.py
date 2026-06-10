@@ -5,7 +5,7 @@ writes it to the local database, and quits. No bonus claiming.
 
 Usage:
     python3 check_balance.py stake_us
-    python3 check_balance.py fortune_coins
+    python3 check_balance.py fortune_wins
     python3 check_balance.py acebet_cc
 """
 

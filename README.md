@@ -54,7 +54,7 @@ This step is set up so that funds in these 'social casinos' are automatically wi
 | :-----------: | :-------------------------------------------------: | :------------------------: | :----------------------------------------------------------: |
 |   Stake.us    |                         $7                          |            98%             |                            $6.86                             |
 | Chumba Casino |                         $7                          |           96.78%           |                            $6.77                             |
-| Fortune Coins |                         $7                          |           95.33%           |                            $6.67                             |
+| Fortune Wins |                         $7                          |           95.33%           |                            $6.67                             |
 |    McLuck     |                        $2.1                         |           96.57%           |                            $2.03                             |
 |    Modu.us    | <u>First Week:</u> <br> <u>Weeks thereafter:</u> $7 |           95.93%           | <u>First Week:</u> $4.22 <br> <u>Weeks thereafter:</u> $6.72 |
 
@@ -64,7 +64,7 @@ This step is set up so that funds in these 'social casinos' are automatically wi
 
 - [Stake.us](stake.us)
 - [Chumba Casino](https://lobby.chumbacasino.com/)
-- [Fortune Coins](https://www.fortunecoins.com/)
+- [Fortune Wins](https://www.fortunewins.com/)
 - [McLuck](https://www.mcluck.com/)
 - [Modo.us](https://modo.us/)
 
@@ -78,7 +78,7 @@ Support for more social casinos is currently in development. The updated list of
 | :-----------: | :------------------------------------------------------------: | :-----------------------------: | :--------: | :-------------------: |
 |   Stake.us    |                              Dice                              |               98%               |   Low 🟢   |         0.98          |
 | Chumba Casino |   Halloween Fortune <br> Butterfly Staxx <br> Anaconda Wild    | 97.07% <br> 96.80% <br> 96.47%  |  High 🔴   |        0.9678         |
-| Fortune Coins |       Pyramids of Giza <br> Fairy Tail <br> Lucky Panda        |      96% <br> 96% <br> 94%      |  Unknown   |        0.9533         |
+| Fortune Wins |       Pyramids of Giza <br> Fairy Tail <br> Lucky Panda        |      96% <br> 96% <br> 94%      |  Unknown   |        0.9533         |
 |    McLuck     | Big Bass Bonanza <br> Buffalo King Megaways <br> Joker's Jewel |  96.71% <br> 96.52 <br> 96.50%  |  Unknown   |        0.9657         |
 |    Modo.us    |  Money Train 2 <br> Buffalo Hold and Win <br> Mighty Gorilla   | 96.4% <br> 95.91 <br> 95.49<br> |  Unknown   |        0.9593         |
 
@@ -94,7 +94,7 @@ The following links are sign-up links with bonuses. Using these links support th
 
 - [Stake.us](stake.us/?c=jiO2uEBV)
 - Chumba Casino (No Referral Link)
-- [Fortune Coins](https://www.fortunecoins.com/register/e3dc78b0-ef38-400c-914b-a4fa7fdb3e2b)
+- [Fortune Wins](https://www.fortunewins.com/register/e3dc78b0-ef38-400c-914b-a4fa7fdb3e2b)
 - [McLuck](https://www.mcluck.com/?r=879233479)
 - [Modo.us](https://modo.us?referralCode=FGr7QdBZVre2)
 
