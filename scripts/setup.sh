@@ -6,7 +6,7 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_USER="${SUDO_USER:-$(whoami)}"
 SERVICE_DIR="/etc/systemd/system"
-VENV="$PROJECT_DIR/bonus-harvest"
+VENV="$PROJECT_DIR/.venv"
 
 # ── system packages ──────────────────────────────────────────────────────────
 echo "[setup] Installing system packages..."

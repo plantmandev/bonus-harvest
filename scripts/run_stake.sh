@@ -22,7 +22,7 @@ if ! pgrep -f "Xvfb :$DISPLAY_NUM" > /dev/null; then
     sleep 1
 fi
 
-source "$PROJECT_DIR/bonus-harvest/bin/activate"
+source "$PROJECT_DIR/.venv/bin/activate"
 
 cd "$PROJECT_DIR"
 if python3 -m casinos.stake_us >> "$LOG_FILE" 2>&1; then

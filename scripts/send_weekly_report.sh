@@ -10,7 +10,7 @@ mkdir -p "$LOG_DIR"
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 
 log "Sending weekly report..."
-source "$PROJECT_DIR/bonus-harvest/bin/activate"
+source "$PROJECT_DIR/.venv/bin/activate"
 cd "$PROJECT_DIR"
 
 if python3 -m data_analysis.report >> "$LOG_FILE" 2>&1; then
