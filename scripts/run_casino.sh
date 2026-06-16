@@ -26,26 +26,33 @@ fi
 source "$PROJECT_DIR/.venv/bin/activate"
 
 cd "$PROJECT_DIR"
-if python3 -m "casinos.$CASINO_KEY" >> "$LOG_FILE" 2>&1; then
+
+# Run harvest — capture exit code without letting set -e kill the script
+HARVEST_EXIT=0
+python3 -m "casinos.$CASINO_KEY" >> "$LOG_FILE" 2>&1 || HARVEST_EXIT=$?
+
+if [ "$HARVEST_EXIT" -eq 0 ]; then
     log "Harvest completed successfully"
 else
-    EXIT_CODE=$?
-    log "Harvest failed — exit code $EXIT_CODE"
-    python3 "$SCRIPT_DIR/notify_failure.py" --casino "$CASINO_KEY" --log "$LOG_FILE" --exit-code "$EXIT_CODE" || true
-    exit "$EXIT_CODE"
+    log "Harvest failed — exit code $HARVEST_EXIT"
+    python3 "$SCRIPT_DIR/notify_failure.py" --casino "$CASINO_KEY" --log "$LOG_FILE" --exit-code "$HARVEST_EXIT" || true
 fi
 
-# ── schedule next precise run via at ─────────────────────────────────────────
+# ── Always schedule the next run regardless of harvest outcome ────────────────
+CMD="bash $SCRIPT_DIR/run_casino.sh $CASINO_KEY"
+
 if [ -f "$NEXT_RUN_FILE" ]; then
     NEXT_RUN=$(cat "$NEXT_RUN_FILE")
     AT_EPOCH=$(date -d "$NEXT_RUN" +%s 2>/dev/null) || {
-        log "Could not parse next run time '$NEXT_RUN' — skipping auto-schedule"
-        exit 0
+        log "Could not parse next run time '$NEXT_RUN' — falling back to 24h"
+        echo "$CMD" | at "now + 24 hours" 2>>"$LOG_FILE" \
+            && log "Fallback: next run scheduled 24h from now" \
+            || log "WARNING: could not schedule via at"
+        exit "$HARVEST_EXIT"
     }
-    CMD="bash $SCRIPT_DIR/run_casino.sh $CASINO_KEY"
     if [ "$AT_EPOCH" -le "$(date +%s)" ]; then
         echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
-            && log "Next run scheduled immediately (stale timestamp)" \
+            && log "Next run scheduled immediately (overdue timestamp)" \
             || log "WARNING: could not schedule via at"
     else
         AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d')
@@ -54,5 +61,10 @@ if [ -f "$NEXT_RUN_FILE" ]; then
             || log "WARNING: could not schedule via at"
     fi
 else
-    log "No next run file — re-run run_all.sh to bootstrap"
+    log "No next_run file found — scheduling fallback in 24h"
+    echo "$CMD" | at "now + 24 hours" 2>>"$LOG_FILE" \
+        && log "Fallback: next run scheduled 24h from now" \
+        || log "WARNING: could not schedule via at"
 fi
+
+exit "$HARVEST_EXIT"
