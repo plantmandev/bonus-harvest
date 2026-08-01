@@ -56,12 +56,12 @@ def _get_service():
                 TOKEN_PATH.unlink(missing_ok=True)
                 _write_status('EXPIRED')
                 raise GmailAuthExpiredError(
-                    'Gmail OAuth token expired or revoked — run: python3 auth/gmail.py'
+                    'Gmail OAuth token expired or revoked — run: python3 -m auth.gmail'
                 )
         else:
             _write_status('EXPIRED')
             raise GmailAuthExpiredError(
-                'Gmail OAuth token missing — run: python3 auth/gmail.py'
+                'Gmail OAuth token missing — run: python3 -m auth.gmail'
             )
         TOKEN_PATH.write_text(creds.to_json())
     _write_status('OK')

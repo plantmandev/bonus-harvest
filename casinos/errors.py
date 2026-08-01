@@ -9,7 +9,7 @@ class HarvestError(RuntimeError):
 
 class GmailAuthExpiredError(HarvestError):
     code   = 'GmailAuthExpired'
-    remedy = 'Run: python3 auth/gmail.py'
+    remedy = 'Run: python3 -m auth.gmail'
 
 
 class AccountVerificationRequired(HarvestError):

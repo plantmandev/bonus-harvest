@@ -68,7 +68,7 @@ FAILURE_BANNER = Template('''
 
 
 _ERROR_REMEDIES = {
-    'GmailAuthExpired':    'Run <code>python3 auth/gmail.py</code> to re-authenticate Gmail.',
+    'GmailAuthExpired':    'Run <code>python3 -m auth.gmail</code> to re-authenticate Gmail.',
     'AccountVerification': 'Log into the casino and complete identity/selfie verification.',
     'Unknown':             'Check the harvest logs for details.',
 }
@@ -185,7 +185,7 @@ def render_html(user_name: str = 'there', as_of: datetime | None = None) -> str:
                     <span style="font-size:13px;font-weight:bold;color:#c0392b;">
                       🔑 Gmail OAuth — GmailAuthExpired
                     </span><br>
-                    <span style="font-size:12px;color:#555;">Run: python3 auth/gmail.py</span>
+                    <span style="font-size:12px;color:#555;">Run: python3 -m auth.gmail</span>
                   </td>
                 </tr>
               </table>

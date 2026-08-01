@@ -52,27 +52,27 @@ for KEY in "${KEYS[@]}"; do
     fi
 
     if [ ! -f "$NEXT_RUN_FILE" ]; then
-        log "$KEY: no next_run file — scheduling immediately"
-        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
-            && log "$KEY: queued for now+1m" \
+        log "$KEY: no next_run file — scheduling in 4h"
+        echo "$CMD" | at "now + 4 hours" 2>>"$LOG_FILE" \
+            && log "$KEY: queued for now+4h" \
             || log "$KEY: WARNING — could not queue via at"
         continue
     fi
 
     NEXT_RUN=$(cat "$NEXT_RUN_FILE")
     AT_EPOCH=$(date -d "$NEXT_RUN" +%s 2>/dev/null) || {
-        log "$KEY: could not parse '$NEXT_RUN' — scheduling immediately"
-        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
-            && log "$KEY: queued for now+1m" \
+        log "$KEY: could not parse '$NEXT_RUN' — scheduling in 4h"
+        echo "$CMD" | at "now + 4 hours" 2>>"$LOG_FILE" \
+            && log "$KEY: queued for now+4h" \
             || log "$KEY: WARNING — could not queue via at"
         continue
     }
 
     NOW_EPOCH=$(date +%s)
     if [ "$AT_EPOCH" -le "$NOW_EPOCH" ]; then
-        log "$KEY: overdue ($NEXT_RUN) — scheduling immediately"
-        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
-            && log "$KEY: queued for now+1m" \
+        log "$KEY: overdue ($NEXT_RUN) — scheduling in 4h"
+        echo "$CMD" | at "now + 4 hours" 2>>"$LOG_FILE" \
+            && log "$KEY: queued for now+4h" \
             || log "$KEY: WARNING — could not queue via at"
     else
         AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d')

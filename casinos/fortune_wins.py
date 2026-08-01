@@ -12,6 +12,8 @@ from .base import BaseCasino, read_credentials, notify
 
 
 class FortuneWins(BaseCasino):
+    DISABLED = True
+
     URL = 'https://www.fortunewins.com/public-lobby'
 
     LOGIN_BUTTON    = (By.XPATH,        '//button[.//span[text()="Log In"]]')

@@ -1,4 +1,8 @@
+import fcntl
 import os
+import re
+import shutil
+import subprocess
 import sys
 import time
 import random
@@ -16,6 +20,7 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 WAIT_TIMEOUT   = 30
 LOG_DIR        = Path(__file__).parent.parent / 'logs'
 SCREENSHOT_DIR = LOG_DIR / 'screenshots'
+DRIVER_LOCK_PATH = LOG_DIR / '.driver.lock'
 
 
 def _log_to_file(line: str) -> None:
@@ -48,6 +53,18 @@ def read_credentials(key: str) -> str:
     return value
 
 
+def _installed_chrome_major_version() -> int | None:
+    binary = shutil.which('google-chrome') or shutil.which('google-chrome-stable')
+    if not binary:
+        return None
+    try:
+        output = subprocess.check_output([binary, '--version'], text=True)
+        match = re.search(r'(\d+)\.', output)
+        return int(match.group(1)) if match else None
+    except Exception:
+        return None
+
+
 def create_driver():
     options = webdriver.ChromeOptions()
     if os.getenv('SERVER_MODE', '').lower() in ('1', 'true', 'yes'):
@@ -56,7 +73,17 @@ def create_driver():
     proxy = os.getenv('PROXY_SERVER')
     if proxy:
         options.add_argument(f'--proxy-server={proxy}')
-    return UC.Chrome(options, version_main=147)
+    # undetected_chromedriver patches a shared binary in ~/.local/share on first
+    # use; two processes launching at once race on that file (Errno 17). Lock
+    # across the launch so concurrent casino runs serialize just this step.
+    DRIVER_LOCK_PATH.parent.mkdir(exist_ok=True)
+    with open(DRIVER_LOCK_PATH, 'w') as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        # Without version_main, UC fetches the latest chromedriver release
+        # rather than matching the installed browser — pin it explicitly so
+        # a Chrome auto-update doesn't silently break the driver match again.
+        driver = UC.Chrome(options, version_main=_installed_chrome_major_version())
+    return driver
 
 
 class BaseCasino:

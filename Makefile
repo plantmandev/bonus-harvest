@@ -1,5 +1,5 @@
 PYTHON  := python3
-VENV    := bonus-harvest
+VENV    := .venv
 PIP     := $(VENV)/bin/pip
 PROJECT := $(shell pwd)
 
@@ -9,7 +9,7 @@ PROJECT := $(shell pwd)
 
 install: $(VENV)/bin/activate
 	@git config core.hooksPath .githooks
-	@echo "Setup complete. Activate with: source bonus-harvest/bin/activate"
+	@echo "Setup complete. Activate with: source .venv/bin/activate"
 
 $(VENV)/bin/activate: requirements.txt
 	$(PYTHON) -m venv $(VENV)

@@ -110,7 +110,7 @@ def _gmail_status() -> tuple[str, str]:
         ts     = parts[1] if len(parts) > 1 else '—'
         if status == 'OK':
             return ts, '[green]OK[/green]'
-        return ts, '[bold red]EXPIRED — run: python3 auth/gmail.py[/bold red]'
+        return ts, '[bold red]EXPIRED — run: python3 -m auth.gmail[/bold red]'
     except Exception:
         return '—', '[yellow]?[/yellow]'
 

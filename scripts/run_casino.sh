@@ -38,8 +38,17 @@ else
     python3 "$SCRIPT_DIR/notify_failure.py" --casino "$CASINO_KEY" --log "$LOG_FILE" --exit-code "$HARVEST_EXIT" || true
 fi
 
-# ── Always schedule the next run regardless of harvest outcome ────────────────
+# ── Schedule the next run regardless of harvest outcome ───────────────────────
 CMD="bash $SCRIPT_DIR/run_casino.sh $CASINO_KEY"
+
+# Guard against duplicate at-jobs if one for this casino is already pending
+# (e.g. a manual re-run, or atd catching up on a backlog after downtime).
+# atq lists the currently-executing job too (status '='), which is this very
+# script — exclude it or every run would find "itself" and never reschedule.
+if atq | awk '$7 == "a" {print $1}' | xargs -r -I{} at -c {} 2>/dev/null | grep -q "run_casino.sh $CASINO_KEY"; then
+    log "An at job for $CASINO_KEY is already queued — skipping scheduling"
+    exit "$HARVEST_EXIT"
+fi
 
 if [ -f "$NEXT_RUN_FILE" ]; then
     NEXT_RUN=$(cat "$NEXT_RUN_FILE")
@@ -51,8 +60,8 @@ if [ -f "$NEXT_RUN_FILE" ]; then
         exit "$HARVEST_EXIT"
     }
     if [ "$AT_EPOCH" -le "$(date +%s)" ]; then
-        echo "$CMD" | at "now + 1 minute" 2>>"$LOG_FILE" \
-            && log "Next run scheduled immediately (overdue timestamp)" \
+        echo "$CMD" | at "now + 4 hours" 2>>"$LOG_FILE" \
+            && log "Next run scheduled in 4h (overdue timestamp)" \
             || log "WARNING: could not schedule via at"
     else
         AT_TIME=$(date -d "$NEXT_RUN" '+%H:%M %Y-%m-%d')

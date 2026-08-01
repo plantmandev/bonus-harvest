@@ -12,6 +12,8 @@ from .base import BaseCasino, read_credentials, notify
 
 
 class AceBetCC(BaseCasino):
+    DISABLED = True
+
     URL = 'https://acebet.cc/'
 
     # Login

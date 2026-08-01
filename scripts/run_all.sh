@@ -44,6 +44,12 @@ python3 -m data_analysis.report >> "$LOG_FILE" 2>&1 && log "Report sent" || log 
 _schedule_casino() {
     local KEY="$1" FILE="$2"
     local NEXT_RUN AT_TIME AT_EPOCH NOW_EPOCH CMD
+    # Guard against duplicate at-jobs if this casino's self-chained job is
+    # already pending (see run_casino.sh, which reschedules itself every run).
+    if atq | awk '{print $1}' | xargs -r -I{} at -c {} 2>/dev/null | grep -q "run_casino.sh $KEY"; then
+        log "$KEY: at job already queued — skipping"
+        return
+    fi
     NEXT_RUN=$(cat "$FILE")
     AT_EPOCH=$(date -d "$NEXT_RUN" +%s 2>/dev/null) || {
         log "Could not parse next run for $KEY: '$NEXT_RUN' — skipping"

@@ -3,6 +3,10 @@ GmailVerification/credentials.json
 GmailVerification/token.json
 auth/token.json
 
+# Virtual environments
+.venv/
+bonus-harvest/
+
 # Python cache
 **/__pycache__
 *.pyc
